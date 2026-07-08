@@ -71,6 +71,22 @@ npm run pack           # unpacked app folder for quick local smoke tests
 Windows builds should be produced on Windows. macOS builds should be produced on
 a Mac, especially when signing/notarization is added later.
 
+After a Windows build, the portable app is written to `dist/CiteLocal 1.0.0.exe`
+and the unpacked app is available at `dist/win-unpacked/CiteLocal.exe`.
+
+## Publish to GitHub
+
+The repository is ready to publish as a public open-source project. Sign in to
+GitHub CLI once, then run the helper:
+
+```
+gh auth login
+powershell -ExecutionPolicy Bypass -File scripts/publish-github.ps1
+```
+
+By default this creates a public `cite-local` repository under the GitHub account
+you authenticated with and pushes the `main` branch.
+
 ## License
 
 MIT. CiteLocal is set up as a free public project that people can use, fork,
