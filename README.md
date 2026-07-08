@@ -10,7 +10,7 @@ No accounts, no ads, no 7-day expiry, no subscription. Runs on your machine.
 - **Auto-cite** by pasting a URL, DOI, or ISBN — or type a title to search (CrossRef).
 - **Manual entry** for 15 source types (website, journal, book, chapter, thesis,
   film, software, …); an "Other/generic" type exposes every common field.
-- **10,852 citation styles** (the full CSL repo — more than their premium tier):
+- **10,852 citation styles** from the official CSL style repository:
   APA, MLA, Chicago, Harvard, Vancouver, IEEE, AMA, and thousands more. Type in
   the style box to search.
 - **Live bibliography**: formatted reference + in-text citation per source,
@@ -110,7 +110,7 @@ node test.js           # offline self-check of extraction + formatting
 ## Accuracy — will it match my curriculum's standard?
 
 The formatting is done by **citeproc-js with the official CSL style files** — the
-same engine and the same style definitions Zotero, Mendeley, and Cite This For Me
+same engine and the same style definitions used by major reference managers
 use. So for a given style the output follows that style's real spec. Two things
 are on you, not the engine:
 

@@ -2,7 +2,7 @@
 
 **Audience:** the implementing agent. Build exactly this, in order. No accounts, no ads, no limits, fully offline after first setup.
 
-## 0. What Cite This For Me actually is (scraped 2026-07-07)
+## 0. Product Shape And Reference Workflow
 
 Feature inventory from citethisforme.com:
 - **Auto-cite lookup** by URL, DOI, ISBN, or title/author search; results list → pick one → citation.
@@ -45,7 +45,7 @@ cite-local/
 - `@citation-js/plugin-bibtex` gives free BibTeX import/export.
 
 Clone once at setup:
-- `git clone --depth 1 https://github.com/citation-style-language/styles` → 10,000+ styles (more than their premium tier).
+- `git clone --depth 1 https://github.com/citation-style-language/styles` -> 10,000+ styles.
 - `git clone --depth 1 https://github.com/citation-style-language/locales`
 
 Build a `styles-index.json` at startup (or setup script): `[{id, title}]` parsed from each `.csl` file's `<title>`/filename. The UI style picker is a `<datalist>`/filtered search over this index. Ship APA/MLA/Chicago/Harvard/Vancouver/IEEE/AMA as pinned favorites.
@@ -96,7 +96,7 @@ Persistence: every mutation → `localStorage.setItem('citelocal', JSON.stringif
 - Grammar/plagiarism checker — different product, use LanguageTool locally if ever wanted.
 - Accounts/sync — it's local; the CSL-JSON export is the sync.
 - Word plugin / browser extension — the clipboard HTML export covers the paste-into-Word case. A bookmarklet that POSTs `location.href` to /api/scrape is a 5-line follow-up if wanted.
-- Perfect scraping of paywalled/JS-rendered pages — meta-tag extraction covers the realistic majority; user edits the pre-filled form for the rest (which is exactly what Cite This For Me makes you do too).
+- Perfect scraping of paywalled/JS-rendered pages - meta-tag extraction covers the realistic majority, and users can edit the pre-filled form for the rest.
 
 ## 7. Ceilings to mark in code
 
