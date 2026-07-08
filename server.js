@@ -151,11 +151,54 @@ app.post('/api/open-data-dir', async (_req, res) => {
   }
 });
 
+app.post('/api/clipboard', async (req, res) => {
+  const text = String(req.body?.text || '');
+  if (!text) return res.status(400).json({ error: 'text required' });
+  try {
+    await writeClipboard(text);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(501).json({ error: 'local clipboard unavailable: ' + e.message });
+  }
+});
+
 function openFolder(path) {
   const platform = process.platform;
   if (platform === 'win32') spawn('explorer.exe', [path], { detached: true, stdio: 'ignore' }).unref();
   else if (platform === 'darwin') spawn('open', [path], { detached: true, stdio: 'ignore' }).unref();
   else spawn('xdg-open', [path], { detached: true, stdio: 'ignore' }).unref();
+}
+
+async function writeClipboard(text) {
+  const commands = process.platform === 'win32'
+    ? [['powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', 'Set-Clipboard -Value ([Console]::In.ReadToEnd())']]]
+    : process.platform === 'darwin'
+      ? [['pbcopy', []]]
+      : [['wl-copy', []], ['xclip', ['-selection', 'clipboard']], ['xsel', ['--clipboard', '--input']]];
+  let lastError;
+  for (const [command, args] of commands) {
+    try {
+      await runClipboardCommand(command, args, text);
+      return;
+    } catch (e) {
+      lastError = e;
+    }
+  }
+  throw lastError || new Error('no clipboard command available');
+}
+
+function runClipboardCommand(command, args, text) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { stdio: ['pipe', 'ignore', 'pipe'] });
+    let stderr = '';
+    child.stderr.on('data', chunk => { stderr += chunk; });
+    child.once('error', reject);
+    child.once('close', code => {
+      if (code === 0) resolve();
+      else reject(new Error(stderr.trim() || `${command} exited with ${code}`));
+    });
+    child.stdin.end(text);
+  });
 }
 
 // Style search

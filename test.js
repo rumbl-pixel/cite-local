@@ -155,7 +155,9 @@ check('generated desktop artifacts are ignored from source control', () => {
 check('server exposes local storage folder APIs for desktop library files', () => {
   assert.match(serverSource, /\/api\/storage/);
   assert.match(serverSource, /\/api\/open-data-dir/);
+  assert.match(serverSource, /\/api\/clipboard/);
   assert.match(serverSource, /function openFolder/);
+  assert.match(serverSource, /function writeClipboard/);
   assert.match(serverSource, /\/api\/health/);
 });
 check('app shell exposes local library, citation workspace, and notepad regions', () => {
@@ -169,7 +171,8 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(cssSource, /margin-bottom: 28px/);
   assert.match(cssSource, /--notes-drawer: clamp\(240px, 20vw, 280px\)/);
   assert.match(cssSource, /body\.notes-open \.app-shell \{/);
-  assert.match(cssSource, /grid-template-columns: clamp\(220px, 16vw, 260px\) minmax\(520px, 1fr\) clamp\(280px, 22vw, 320px\) var\(--notes-drawer\)/);
+  assert.match(cssSource, /grid-template-columns: clamp\(220px, 16vw, 260px\) minmax\(360px, 1fr\) clamp\(230px, 20vw, 300px\) var\(--notes-drawer\)/);
+  assert.match(cssSource, /grid-template-columns: 68px minmax\(480px, 1fr\) clamp\(230px, 20vw, 300px\) var\(--notes-drawer\)/);
   assert.match(cssSource, /body\.notes-open \{ --notes-drawer: 220px; \}/);
   assert.match(cssSource, /body\.notes-open \.project-rail/);
   assert.match(cssSource, /body\.notes-open \.notes-backdrop/);
@@ -188,6 +191,8 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(htmlSource, /class="word-counter word-counter-page"/);
   assert.match(htmlSource, /class="tool-section-label">Tools/);
   assert.match(appSource, /project-rail-label/);
+  assert.match(appSource, /async function copyText/);
+  assert.match(appSource, /\/api\/clipboard/);
   assert.match(htmlSource, /Word count/);
   assert.match(htmlSource, /Drop a PDF here/);
   assert.match(htmlSource, /Merge PDFs/);

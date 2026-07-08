@@ -62,7 +62,7 @@ body.pdf-drawer-expanded .app-shell {
   grid-template-columns: clamp(220px, 16vw, 260px) minmax(520px, 1fr) clamp(280px, 22vw, 320px);
 }
 body.notes-open .app-shell {
-  grid-template-columns: clamp(220px, 16vw, 260px) minmax(520px, 1fr) clamp(280px, 22vw, 320px) var(--notes-drawer);
+  grid-template-columns: clamp(220px, 16vw, 260px) minmax(360px, 1fr) clamp(230px, 20vw, 300px) var(--notes-drawer);
 }
 .app-shell.rail-collapsed {
   grid-template-columns: 68px minmax(680px, 1fr) clamp(300px, 22vw, 350px) 54px;
@@ -71,7 +71,7 @@ body.pdf-drawer-expanded .app-shell.rail-collapsed {
   grid-template-columns: 68px minmax(560px, 1fr) clamp(280px, 22vw, 320px);
 }
 body.notes-open .app-shell.rail-collapsed {
-  grid-template-columns: 68px minmax(560px, 1fr) clamp(280px, 22vw, 320px) var(--notes-drawer);
+  grid-template-columns: 68px minmax(480px, 1fr) clamp(230px, 20vw, 300px) var(--notes-drawer);
 }
 .project-rail {
   background: var(--rail);

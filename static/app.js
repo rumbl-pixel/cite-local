@@ -860,15 +860,55 @@ $('#sourceQualityBadge').onkeydown = e => {
     focusSourceReview();
   }
 };
-$('#copySelectedEntry').onclick = () => {
+async function copyText(text, successMessage) {
+  const value = String(text || '').trim();
+  if (!value) {
+    toast('Nothing to copy');
+    return false;
+  }
+  const legacyCopy = () => {
+    const area = el('textarea', { value });
+    area.setAttribute('readonly', '');
+    Object.assign(area.style, { position: 'fixed', left: '-9999px', top: '0' });
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    const copied = document.execCommand('copy');
+    area.remove();
+    return copied;
+  };
+  if (legacyCopy()) {
+    toast(successMessage);
+    return true;
+  }
+  try {
+    await navigator.clipboard.writeText(value);
+    toast(successMessage);
+    return true;
+  } catch {
+    try {
+      await api('/api/clipboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: value }),
+      });
+      toast(successMessage);
+      return true;
+    } catch {
+      toast('Copy failed. Select the text and copy manually.');
+      return false;
+    }
+  }
+}
+$('#copySelectedEntry').onclick = async () => {
   const txt = $('#selectedEntry').textContent.trim();
   if (!txt) return toast('Select a source first');
-  navigator.clipboard.writeText(txt); toast('Reference copied');
+  await copyText(txt, 'Reference copied');
 };
-$('#copySelectedInText').onclick = () => {
+$('#copySelectedInText').onclick = async () => {
   const txt = $('#selectedInText').textContent.trim();
   if (!txt) return toast('Select a source first');
-  navigator.clipboard.writeText(txt); toast('In-text citation copied');
+  await copyText(txt, 'In-text citation copied');
 };
 $('#editSelected').onclick = () => {
   const src = selectedSource();
@@ -1161,7 +1201,7 @@ $('#copyAll').onclick = async () => {
       'text/plain': new Blob([text], { type: 'text/plain' }),
     })]);
     toast('Bibliography copied');
-  } catch { await navigator.clipboard.writeText(text); toast('Copied as plain text'); }
+  } catch { await copyText(text, 'Copied as plain text'); }
 };
 $('#printPdf').onclick = () => {
   if (!hasEntries()) return;
