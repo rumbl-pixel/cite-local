@@ -1,6 +1,7 @@
 // One runnable self-check. `node test.js` — exits nonzero if the core logic breaks.
 import assert from 'node:assert';
 import { readFile } from 'node:fs/promises';
+import vm from 'node:vm';
 import * as cheerio from 'cheerio';
 import { Cite, plugins } from '@citation-js/core';
 import '@citation-js/plugin-csl';
@@ -73,6 +74,20 @@ const gitignoreSource = await readFile('.gitignore', 'utf8');
 const macIconSource = await readFile('build/icon.svg', 'utf8');
 const licenseSource = await readFile('LICENSE', 'utf8');
 const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
+
+function appFunction(name) {
+  const start = appSource.indexOf(`function ${name}(`);
+  assert.notStrictEqual(start, -1, `${name} not found`);
+  const bodyStart = appSource.indexOf('{', start);
+  let depth = 0;
+  for (let i = bodyStart; i < appSource.length; i++) {
+    if (appSource[i] === '{') depth++;
+    if (appSource[i] === '}') depth--;
+    if (depth === 0) return vm.runInNewContext(`(${appSource.slice(start, i + 1)})`);
+  }
+  throw new Error(`${name} body not closed`);
+}
+
 check('APA output is non-empty and names the author', () => {
   assert.ok(apa.length > 10, 'APA empty'); assert.ok(/Doe/.test(apa), 'no author in APA');
 });
@@ -148,12 +163,14 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   });
   assert.match(htmlSource, /class="notes-toggle"/);
   assert.match(cssSource, /margin-bottom: 28px/);
-  assert.match(cssSource, /--notes-drawer: min\(260px, 78vw\)/);
+  assert.match(cssSource, /--notes-drawer: clamp\(240px, 20vw, 280px\)/);
   assert.match(cssSource, /body\.notes-open \.app-shell \{/);
-  assert.match(cssSource, /margin-right: var\(--notes-drawer\)/);
-  assert.match(cssSource, /body\.notes-open \{ --notes-drawer: min\(220px, 72vw\); \}/);
+  assert.match(cssSource, /grid-template-columns: clamp\(220px, 16vw, 260px\) minmax\(520px, 1fr\) clamp\(280px, 22vw, 320px\) var\(--notes-drawer\)/);
+  assert.match(cssSource, /body\.notes-open \{ --notes-drawer: 220px; \}/);
   assert.match(cssSource, /body\.notes-open \.project-rail/);
   assert.match(cssSource, /body\.notes-open \.notes-backdrop/);
+  assert.match(cssSource, /body\.notes-open \.notes-drawer/);
+  assert.match(cssSource, /body\.notes-open \.pdf-tool-drawer/);
   assert.match(cssSource, /body\.pdf-drawer-expanded \.library-pane/);
   assert.match(cssSource, /\.pdf-tool-drawer/);
   assert.match(cssSource, /\.pdf-tool-drawer\.collapsed/);
@@ -173,7 +190,7 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(htmlSource, /OCR PDF/);
   assert.match(htmlSource, /PDF to Word/);
   assert.match(cssSource, /grid-template-columns: clamp\(220px, 16vw, 260px\) minmax\(620px, 1fr\) clamp\(300px, 22vw, 350px\) 54px/);
-  assert.match(cssSource, /width: var\(--notes-drawer\)/);
+  assert.match(htmlSource, /id="pdfToolDrawerContent"[^>]+aria-hidden="true"/);
   assert.match(cssSource, /\.export-card \{/);
   assert.match(cssSource, /width: fit-content/);
   assert.match(cssSource, /max-width: 260px/);
@@ -249,6 +266,46 @@ check('normalizing an imported library preserves projects, notes, and sources', 
   assert.strictEqual(lib.projects[0].trashedAt, '2026-07-08T00:00:00.000Z');
   assert.strictEqual(lib.projects[0].notes[0].text, 'legacy note');
   assert.strictEqual(lib.projects[0].sources[0].id, 's1');
+});
+check('normalizeLibrary round-trips folders, trash, notes, and sources', () => {
+  const original = {
+    folders: [{ id: 'folder-nurs1004', name: 'NURS1004' }, { id: 'folder-nurs1005', name: 'NURS1005' }],
+    active: 1,
+    selected: 's2',
+    projects: [
+      { id: 'p1', name: 'Assignment 1', unit: 'NURS1004', folder: 'NURS1004', trashedAt: '', style: 'apa', notes: [{ id: 'n1', text: 'Keep this', sourceId: 's1' }], sources: [{ id: 's1', title: 'One' }] },
+      { id: 'p2', name: 'Assignment 2', unit: 'NURS1005', folder: 'NURS1005', trashedAt: '2026-07-08T00:00:00.000Z', style: 'ieee', notes: [{ id: 'n2', text: 'Also keep this', sourceId: 's2' }], sources: [{ id: 's2', title: 'Two' }] },
+    ],
+  };
+  const once = normalizeLibrary(original);
+  const twice = normalizeLibrary(JSON.parse(JSON.stringify(once)));
+  assert.deepStrictEqual(twice, once);
+  assert.deepStrictEqual(twice.folders.map(f => f.name), ['NURS1004', 'NURS1005', 'General']);
+  assert.strictEqual(twice.projects[1].trashedAt, original.projects[1].trashedAt);
+  assert.strictEqual(twice.projects[1].notes[0].sourceId, 's2');
+  assert.strictEqual(twice.projects[1].sources[0].title, 'Two');
+});
+check('word count can ignore parenthesized citations', () => {
+  const textWithoutParentheses = appFunction('textWithoutParentheses');
+  const countWords = appFunction('countWords');
+  const sample = 'This paragraph has five words (Doe, 2024; Smith, 2023) outside.';
+  assert.strictEqual(countWords(sample), 10);
+  assert.strictEqual(textWithoutParentheses(sample).replace(/\s+/g, ' ').trim(), 'This paragraph has five words outside.');
+  assert.strictEqual(countWords(textWithoutParentheses(sample)), 6);
+  assert.strictEqual(countWords(textWithoutParentheses('Nested (ignore this (and this)) keep two')), 3);
+});
+check('CSL-JSON sources export to non-empty BibTeX', () => {
+  const bib = new Cite([{
+    id: 'export-book',
+    type: 'book',
+    title: 'Exportable Book',
+    author: [{ family: 'Writer', given: 'Casey' }],
+    publisher: 'Local Press',
+    issued: { 'date-parts': [[2024]] },
+  }]).format('bibtex').trim();
+  assert.match(bib, /@book\{/);
+  assert.match(bib, /title = \{Exportable \{Book\}\}/);
+  assert.ok(bib.length > 40);
 });
 
 // --- in-text citations must be computed in-context (numbering + disambiguation) ---

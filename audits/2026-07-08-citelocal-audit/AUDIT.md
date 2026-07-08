@@ -7,10 +7,7 @@ Destination: local folder
 
 ## Evidence Captured
 
-1. `01-workspace-collapsed-pdf-rail.png` - bibliography workspace with collapsed PDF rail.
-2. `02-pdf-tools-expanded-right-drawer.png` - PDF drawer before the ratio correction.
-3. `03-pdf-drawer-expanded-ratio-fixed.png` - PDF drawer after the ratio correction.
-4. `04-folder-created-collapsed-pdf-rail.png` - folder creation smoke after returning to bibliography mode.
+Screenshot evidence was captured locally during the audit and intentionally left out of source control because `*.png` files are ignored. The public audit keeps the findings and flow notes without linking to local-only image files.
 
 ## Flow Steps
 

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CiteLocal Library</title>
-  <link rel="stylesheet" href="style.css?v=drawer3">
+  <link rel="stylesheet" href="style.css?v=drawer4">
 </head>
 <body>
 <div id="appHealth" class="app-health hidden"></div>
@@ -26,9 +26,15 @@
       <button class="rail-section" type="button" data-section="trash">Trash</button>
     </nav>
     <nav id="compactRailSections" class="compact-rail-sections" aria-label="Collapsed library sections">
-      <button class="compact-rail-section active" type="button" data-section="library" title="Library" aria-label="Library">L</button>
-      <button class="compact-rail-section" type="button" data-section="folders" title="Folders" aria-label="Folders">F</button>
-      <button class="compact-rail-section" type="button" data-section="trash" title="Trash" aria-label="Trash">T</button>
+      <button class="compact-rail-section active" type="button" data-section="library" title="Library" aria-label="Library">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5c2.4 0 4 .4 5.5 1.6v13.4C9 18.4 7.4 18 5 18V4.5Zm14 0V18c-2.4 0-4 .4-5.5 1.5V6.1C15 4.9 16.6 4.5 19 4.5ZM5 18c2.4 0 4 .4 5.5 1.5M19 18c-2.4 0-4 .4-5.5 1.5"/></svg>
+      </button>
+      <button class="compact-rail-section" type="button" data-section="folders" title="Folders" aria-label="Folders">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5h6l1.8 2h9.2v9h-17v-11Zm0 0V6h6.4l1.8 2h8.8v1.5"/></svg>
+      </button>
+      <button class="compact-rail-section" type="button" data-section="trash" title="Trash" aria-label="Trash">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5.5h6V7m-8.5 0 1 12h9l1-12M10 10v6M14 10v6"/></svg>
+      </button>
     </nav>
     <div class="rail-actions">
       <button id="newProj" title="New bibliography">New</button>
@@ -143,63 +149,57 @@
         </div>
       </div>
       <div id="sourceList" class="source-list"></div>
-      <p id="empty" class="empty">Paste a link, DOI, ISBN, or title above to start building this bibliography.</p>
+      <div id="empty" class="empty ghost-card">
+        <b>Start this bibliography</b>
+        <span>Paste a URL, DOI, or ISBN above, cite manually, or import a `.bib` / `.json` file.</span>
+        <div>
+          <button id="emptyPasteAction" type="button">Paste source</button>
+          <button id="emptyManualAction" type="button">Cite manually</button>
+          <button id="emptyImportAction" type="button">Import file</button>
+        </div>
+      </div>
     </section>
   </main>
 
   <aside id="pdfToolDrawer" class="pdf-tool-drawer collapsed" aria-label="PDF tool actions">
-    <button id="togglePdfToolDrawer" class="pdf-drawer-tab" type="button" aria-label="Open PDF tools" title="PDF tools">
+    <button id="togglePdfToolDrawer" class="pdf-drawer-tab" type="button" aria-label="Open PDF tools" title="PDF tools" aria-expanded="false" aria-controls="pdfToolDrawerContent">
       <span aria-hidden="true">PDF</span>
     </button>
-    <section class="pdf-tool-drawer-card">
-      <div class="section-head">
+    <section id="pdfToolDrawerContent" class="pdf-tool-drawer-card" aria-hidden="true">
+      <div class="section-head drawer-head">
         <h3>PDF actions</h3>
-        <button id="closePdfToolDrawer" class="small" type="button" aria-label="Collapse PDF tools">Close</button>
+        <button id="closePdfToolDrawer" class="icon-button drawer-collapse" type="button" aria-label="Collapse PDF tools">›</button>
       </div>
-      <p id="pdfToolStatus" class="pdf-tool-status">Choose a PDF, then select a tool. Local PDF processing hooks are reserved for the next release.</p>
+      <p id="pdfToolStatus" class="pdf-tool-status">Choose a PDF here or from the PDF workspace. Processing actions are planned for a local-only release.</p>
       <div class="pdf-tool-layout">
-        <section class="pdf-tool-group">
-          <h3>Organise</h3>
+        <section class="pdf-tool-group planned-tools">
+          <h3>Planned local actions</h3>
+          <p>These run locally when implemented — nothing uploads.</p>
           <div class="pdf-tool-grid">
-            <button class="pdf-tool" type="button" data-pdf-tool="merge">Merge PDFs</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="split">Split PDF</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="extract-pages">Extract pages</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="remove-pages">Remove pages</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="reorder">Reorder pages</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="rotate">Rotate pages</button>
-          </div>
-        </section>
-        <section class="pdf-tool-group">
-          <h3>Convert</h3>
-          <div class="pdf-tool-grid">
-            <button class="pdf-tool" type="button" data-pdf-tool="pdf-to-word">PDF to Word</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="pdf-to-image">PDF to image</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="image-to-pdf">Image to PDF</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="html-to-pdf">HTML to PDF</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="pdf-to-text">PDF to text</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="markdown-to-pdf">Markdown to PDF</button>
-          </div>
-        </section>
-        <section class="pdf-tool-group">
-          <h3>Clean up</h3>
-          <div class="pdf-tool-grid">
-            <button class="pdf-tool" type="button" data-pdf-tool="compress">Compress PDF</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="ocr">OCR PDF</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="repair">Repair PDF</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="sanitize">Sanitize PDF</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="remove-metadata">Remove metadata</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="flatten">Flatten PDF</button>
-          </div>
-        </section>
-        <section class="pdf-tool-group">
-          <h3>Protect</h3>
-          <div class="pdf-tool-grid">
-            <button class="pdf-tool" type="button" data-pdf-tool="sign">Sign PDF</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="watermark">Watermark</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="encrypt">Add password</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="decrypt">Remove password</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="redact">Redact</button>
-            <button class="pdf-tool" type="button" data-pdf-tool="compare">Compare PDFs</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="merge" aria-disabled="true" disabled>Merge PDFs</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="split" aria-disabled="true" disabled>Split PDF</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="extract-pages" aria-disabled="true" disabled>Extract pages</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="remove-pages" aria-disabled="true" disabled>Remove pages</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="reorder" aria-disabled="true" disabled>Reorder pages</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="rotate" aria-disabled="true" disabled>Rotate pages</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="pdf-to-word" aria-disabled="true" disabled>PDF to Word</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="pdf-to-image" aria-disabled="true" disabled>PDF to image</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="image-to-pdf" aria-disabled="true" disabled>Image to PDF</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="html-to-pdf" aria-disabled="true" disabled>HTML to PDF</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="pdf-to-text" aria-disabled="true" disabled>PDF to text</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="markdown-to-pdf" aria-disabled="true" disabled>Markdown to PDF</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="compress" aria-disabled="true" disabled>Compress PDF</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="ocr" aria-disabled="true" disabled>OCR PDF</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="repair" aria-disabled="true" disabled>Repair PDF</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="sanitize" aria-disabled="true" disabled>Sanitize PDF</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="remove-metadata" aria-disabled="true" disabled>Remove metadata</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="flatten" aria-disabled="true" disabled>Flatten PDF</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="sign" aria-disabled="true" disabled>Sign PDF</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="watermark" aria-disabled="true" disabled>Watermark</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="encrypt" aria-disabled="true" disabled>Add password</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="decrypt" aria-disabled="true" disabled>Remove password</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="redact" aria-disabled="true" disabled>Redact</button>
+            <button class="pdf-tool planned" type="button" data-pdf-tool="compare" aria-disabled="true" disabled>Compare PDFs</button>
           </div>
         </section>
       </div>
@@ -210,7 +210,7 @@
     <section class="preview-card">
       <div class="section-head workspace-head">
         <h3>Citation workspace</h3>
-        <button id="openNotesDrawer" class="notes-toggle" type="button">Notes</button>
+        <button id="openNotesDrawer" class="notes-toggle" type="button" aria-expanded="false" aria-controls="notesDrawer">Notes</button>
       </div>
       <div id="selectedEmpty" class="empty tight">Select a source to copy its reference or in-text citation.</div>
       <div id="selectedCitation" class="selected-citation hidden">
@@ -250,40 +250,43 @@
     </section>
 
     <section class="export-card">
-      <h3>Export</h3>
-      <div class="exports">
-        <button id="copyAll">Copy</button>
-        <button id="printPdf">PDF</button>
-        <button id="dlHtml">.html</button>
-        <button id="dlTxt">.txt</button>
-        <button id="dlRtf">.rtf</button>
-        <button id="dlBibtex">BibTeX</button>
-        <button id="dlJson">CSL-JSON</button>
-        <button id="importBtn">Import</button>
-        <input id="importFile" type="file" accept=".json,.bib,.bibtex,.txt" hidden>
-        <button id="dlLibrary">Backup</button>
-        <button id="importLibraryBtn">Restore</button>
-        <input id="importLibraryFile" type="file" accept=".json" hidden>
-      </div>
+      <details class="export-menu">
+        <summary>Export bibliography</summary>
+        <div class="exports">
+          <button id="copyAll">Copy all</button>
+          <button id="printPdf">PDF</button>
+          <button id="dlHtml">.html</button>
+          <button id="dlTxt">.txt</button>
+          <button id="dlRtf">.rtf</button>
+          <button id="dlBibtex">BibTeX</button>
+          <button id="dlJson">CSL-JSON</button>
+          <button id="importBtn">Import</button>
+          <input id="importFile" type="file" accept=".json,.bib,.bibtex,.txt" hidden>
+          <button id="dlLibrary">Backup</button>
+          <button id="importLibraryBtn">Restore</button>
+          <input id="importLibraryFile" type="file" accept=".json" hidden>
+        </div>
+      </details>
     </section>
 
+  </aside>
+
+  <aside id="notesDrawer" class="notes-drawer" aria-hidden="true" aria-label="Notes drawer">
+    <section class="notes-card">
+      <div class="section-head drawer-head">
+        <h3>Notes</h3>
+        <button id="closeNotesDrawer" class="icon-button drawer-collapse" type="button" aria-label="Collapse notes">›</button>
+      </div>
+      <span id="noteStatus" class="note-status">Saved locally</span>
+      <div id="noteList" class="note-list"></div>
+      <button id="addNote" class="add-note">+ Add note</button>
+    </section>
   </aside>
 </div>
 
 <button id="notesBackdrop" class="notes-backdrop" type="button" aria-label="Close notes"></button>
-<aside id="notesDrawer" class="notes-drawer" aria-hidden="true">
-  <section class="notes-card">
-    <div class="section-head">
-      <h3>Notes</h3>
-      <button id="closeNotesDrawer" class="icon-button" type="button" aria-label="Close notes">×</button>
-    </div>
-    <span id="noteStatus" class="note-status">Saved locally</span>
-    <div id="noteList" class="note-list"></div>
-    <button id="addNote" class="add-note">+ Add note</button>
-  </section>
-</aside>
 
 <div id="toast" class="toast"></div>
-  <script type="module" src="app.js?v=drawer3"></script>
+  <script type="module" src="app.js?v=drawer4"></script>
 </body>
 </html>

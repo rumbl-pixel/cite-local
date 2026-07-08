@@ -214,9 +214,14 @@ function setRailCollapsed(next) {
 }
 function setNotesDrawerOpen(next) {
   notesDrawerOpen = next;
+  if (next) {
+    pdfDrawerExpanded = false;
+    activeTool = '';
+  }
   document.body.classList.toggle('notes-open', notesDrawerOpen);
   $('#notesDrawer').setAttribute('aria-hidden', String(!notesDrawerOpen));
   $('#openNotesDrawer').setAttribute('aria-expanded', String(notesDrawerOpen));
+  renderToolWorkspace();
 }
 function renderLibrarySections() {
   const sections = $('#railSections');
@@ -289,6 +294,7 @@ function renderToolWorkspace() {
   $('#pdfToolDrawer').classList.toggle('expanded', pdfMode);
   $('#pdfToolDrawer').classList.toggle('collapsed', !pdfMode);
   $('#togglePdfToolDrawer').setAttribute('aria-expanded', String(pdfMode));
+  $('#pdfToolDrawerContent').setAttribute('aria-hidden', String(!pdfMode));
   $('#wordCountTool').classList.toggle('hidden', activeTool !== 'word-count');
   $('#pdfToolsPanel').classList.toggle('hidden', activeTool !== 'pdf-tools');
   document.querySelectorAll('.tool-tab').forEach(button => {
@@ -381,7 +387,7 @@ function renderFolderBlock(list, folder) {
   list.appendChild(box);
 }
 function renderProjectButton(list, p, i) {
-  const b = el('button', { className: i === db.active ? 'project-item active' : 'project-item' });
+  const b = el('button', { className: i === db.active ? 'project-item active' : 'project-item', type: 'button' });
   b.innerHTML = `<span>${esc(projectDisplayName(p))}</span><small>${esc(projectSubline(p))}</small>`;
   b.onclick = () => {
     db.active = i;
@@ -679,6 +685,12 @@ $('#addCaptureCandidate').onclick = () => {
 };
 $('#openExistingCapture').onclick = openExistingCaptureSource;
 $('#mergeCaptureCandidate').onclick = mergeCaptureCandidate;
+$('#emptyPasteAction').onclick = () => $('#omni').focus();
+$('#emptyManualAction').onclick = () => {
+  $('#manual').open = true;
+  $('#typeSel').focus();
+};
+$('#emptyImportAction').onclick = () => $('#importFile').click();
 
 // ---- source list and citation workspace ----
 function renderSourceList() {
@@ -983,6 +995,7 @@ $('#pdfDropZone').ondrop = e => {
 $('#pdfToolDrawer').onclick = e => {
   const button = e.target.closest('.pdf-tool');
   if (!button) return;
+  if (button.disabled || button.getAttribute('aria-disabled') === 'true') return;
   document.querySelectorAll('.pdf-tool').forEach(b => b.classList.toggle('active', b === button));
   selectPdfTool(button.dataset.pdfTool || button.textContent.trim());
 };
