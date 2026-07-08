@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CiteLocal Library</title>
+  <link rel="stylesheet" href="style.css?v=drawer3">
+</head>
+<body>
+<div id="appHealth" class="app-health hidden"></div>
+<div id="appShell" class="app-shell">
+  <aside id="projectRail" class="project-rail">
+    <div class="brand-row">
+      <div class="brand">
+        <div class="mark">CL</div>
+        <div class="brand-copy">
+          <h1>CiteLocal</h1>
+          <p>Local reference library</p>
+        </div>
+      </div>
+      <button id="toggleRail" class="icon-button" type="button" aria-label="Collapse bibliography sidebar" aria-expanded="true">‹</button>
+    </div>
+    <nav id="railSections" class="rail-sections" aria-label="Library sections">
+      <button class="rail-section active" type="button" data-section="library">Library</button>
+      <button class="rail-section" type="button" data-section="folders">Folders</button>
+      <button class="rail-section" type="button" data-section="trash">Trash</button>
+    </nav>
+    <nav id="compactRailSections" class="compact-rail-sections" aria-label="Collapsed library sections">
+      <button class="compact-rail-section active" type="button" data-section="library" title="Library" aria-label="Library">L</button>
+      <button class="compact-rail-section" type="button" data-section="folders" title="Folders" aria-label="Folders">F</button>
+      <button class="compact-rail-section" type="button" data-section="trash" title="Trash" aria-label="Trash">T</button>
+    </nav>
+    <div class="rail-actions">
+      <button id="newProj" title="New bibliography">New</button>
+      <button id="newFolder" title="New unit folder">New folder</button>
+      <button id="restoreProj" class="hidden" title="Restore selected bibliography">Restore</button>
+      <button id="delProj" title="Delete selected bibliography">Delete</button>
+    </div>
+    <form id="folderCreator" class="folder-creator hidden">
+      <input id="folderNameInput" aria-label="Unit folder name" placeholder="Unit folder">
+      <div>
+        <button id="saveFolder" type="submit">Add</button>
+        <button id="cancelFolder" type="button">Cancel</button>
+      </div>
+    </form>
+    <p class="tool-section-label">Tools</p>
+    <div id="toolTabs" class="tool-tabs" aria-label="Tools">
+      <button class="tool-tab" type="button" data-tool="word-count">Word count</button>
+      <button class="tool-tab" type="button" data-tool="pdf-tools">PDF tools</button>
+    </div>
+    <p class="rail-label project-rail-label">Bibliographies</p>
+    <div id="projectList" class="project-list"></div>
+  </aside>
+
+  <main class="library-pane">
+    <header class="library-header">
+      <div class="project-editor">
+        <p class="eyebrow">Current assignment</p>
+        <textarea id="projectNameInput" class="project-name-input" aria-label="Assignment or bibliography name" rows="2"></textarea>
+        <div class="project-meta-row">
+          <input id="unitCodeInput" class="unit-code-input" aria-label="Unit code" placeholder="Unit code">
+          <input id="projectFolderInput" class="unit-code-input" aria-label="Folder" placeholder="Folder">
+          <p id="projectMetaLine" class="project-meta-line"></p>
+        </div>
+      </div>
+      <select id="stylePreset" title="Common citation style"></select>
+    </header>
+
+    <section id="toolWorkspace" class="tool-workspace hidden" aria-live="polite">
+      <div id="wordCountTool" class="tool-panel hidden">
+        <div class="tool-hero">
+          <p class="eyebrow">Tools</p>
+          <h2>Word count</h2>
+          <button id="closeToolWorkspace" type="button">Back to bibliography</button>
+        </div>
+        <section class="word-counter word-counter-page" aria-label="Word count tool">
+          <div class="word-counter-head">
+            <h4>Paste text</h4>
+            <button id="clearWordCount" type="button">Clear</button>
+          </div>
+          <textarea id="wordCountInput" rows="10" placeholder="Paste text to count words..."></textarea>
+          <div class="word-count-stats">
+            <span><b id="wordCountTotal">0</b> words</span>
+            <span><b id="wordCountClean">0</b> ignoring parentheses</span>
+          </div>
+        </section>
+      </div>
+
+      <div id="pdfToolsPanel" class="tool-panel hidden">
+        <div class="tool-hero">
+          <p class="eyebrow">Tools</p>
+          <h2>PDF tools</h2>
+          <button id="closePdfTools" type="button">Back to bibliography</button>
+        </div>
+        <section id="pdfDropZone" class="pdf-drop-zone" tabindex="0" role="button" aria-label="Drop or choose a PDF document">
+          <input id="pdfToolFile" type="file" accept="application/pdf,.pdf" hidden>
+          <strong>Drop a PDF here</strong>
+          <span id="pdfToolFileStatus">or click to choose one from your computer</span>
+        </section>
+      </div>
+    </section>
+
+    <section id="capturePanel" class="capture-panel">
+      <div class="omnibox">
+        <input id="omni" placeholder="Paste a URL, DOI, ISBN, or search by title">
+        <button id="omniGo">Capture</button>
+      </div>
+      <div class="capture-workbench">
+        <div id="omniResults" class="results"></div>
+        <div id="captureReview" class="capture-review hidden">
+          <p class="field-label">Review capture</p>
+          <h3 id="capturePreviewTitle"></h3>
+          <p id="capturePreviewMeta" class="capture-meta"></p>
+          <dl class="capture-facts">
+            <div><dt>Type</dt><dd id="capturePreviewType"></dd></div>
+            <div><dt>Year</dt><dd id="capturePreviewYear"></dd></div>
+            <div><dt>Identifier</dt><dd id="capturePreviewId"></dd></div>
+          </dl>
+          <p id="captureDuplicateNotice" class="capture-duplicate hidden"></p>
+          <div class="capture-actions">
+            <button id="addCaptureCandidate">Add to library</button>
+            <button id="openExistingCapture" class="hidden" type="button">Open existing</button>
+            <button id="mergeCaptureCandidate" class="hidden" type="button">Fill missing metadata</button>
+          </div>
+        </div>
+      </div>
+      <details id="manual">
+        <summary>Manual source entry</summary>
+        <label>Source type
+          <select id="typeSel"></select>
+        </label>
+        <div id="formFields"></div>
+        <button id="addManual">Add to library</button>
+      </details>
+    </section>
+
+    <section id="sourceSection" class="source-section">
+      <div class="section-head">
+        <h3>Sources <span id="count" class="count"></span></h3>
+        <div class="source-tools">
+          <button id="reviewFilter" type="button" aria-pressed="false">Needs review</button>
+          <input id="sourceSearch" placeholder="Search this bibliography">
+        </div>
+      </div>
+      <div id="sourceList" class="source-list"></div>
+      <p id="empty" class="empty">Paste a link, DOI, ISBN, or title above to start building this bibliography.</p>
+    </section>
+  </main>
+
+  <aside id="pdfToolDrawer" class="pdf-tool-drawer collapsed" aria-label="PDF tool actions">
+    <button id="togglePdfToolDrawer" class="pdf-drawer-tab" type="button" aria-label="Open PDF tools" title="PDF tools">
+      <span aria-hidden="true">PDF</span>
+    </button>
+    <section class="pdf-tool-drawer-card">
+      <div class="section-head">
+        <h3>PDF actions</h3>
+        <button id="closePdfToolDrawer" class="small" type="button" aria-label="Collapse PDF tools">Close</button>
+      </div>
+      <p id="pdfToolStatus" class="pdf-tool-status">Choose a PDF, then select a tool. Processing hooks are ready for local Stirling PDF integration.</p>
+      <div class="pdf-tool-layout">
+        <section class="pdf-tool-group">
+          <h3>Organise</h3>
+          <div class="pdf-tool-grid">
+            <button class="pdf-tool" type="button" data-pdf-tool="merge">Merge PDFs</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="split">Split PDF</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="extract-pages">Extract pages</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="remove-pages">Remove pages</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="reorder">Reorder pages</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="rotate">Rotate pages</button>
+          </div>
+        </section>
+        <section class="pdf-tool-group">
+          <h3>Convert</h3>
+          <div class="pdf-tool-grid">
+            <button class="pdf-tool" type="button" data-pdf-tool="pdf-to-word">PDF to Word</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="pdf-to-image">PDF to image</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="image-to-pdf">Image to PDF</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="html-to-pdf">HTML to PDF</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="pdf-to-text">PDF to text</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="markdown-to-pdf">Markdown to PDF</button>
+          </div>
+        </section>
+        <section class="pdf-tool-group">
+          <h3>Clean up</h3>
+          <div class="pdf-tool-grid">
+            <button class="pdf-tool" type="button" data-pdf-tool="compress">Compress PDF</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="ocr">OCR PDF</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="repair">Repair PDF</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="sanitize">Sanitize PDF</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="remove-metadata">Remove metadata</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="flatten">Flatten PDF</button>
+          </div>
+        </section>
+        <section class="pdf-tool-group">
+          <h3>Protect</h3>
+          <div class="pdf-tool-grid">
+            <button class="pdf-tool" type="button" data-pdf-tool="sign">Sign PDF</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="watermark">Watermark</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="encrypt">Add password</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="decrypt">Remove password</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="redact">Redact</button>
+            <button class="pdf-tool" type="button" data-pdf-tool="compare">Compare PDFs</button>
+          </div>
+        </section>
+      </div>
+    </section>
+  </aside>
+
+  <aside id="detailPanel" class="detail-panel">
+    <section class="preview-card">
+      <div class="section-head workspace-head">
+        <h3>Citation workspace</h3>
+        <button id="openNotesDrawer" class="notes-toggle" type="button">Notes</button>
+      </div>
+      <div id="selectedEmpty" class="empty tight">Select a source to copy its reference or in-text citation.</div>
+      <div id="selectedCitation" class="selected-citation hidden">
+        <form id="sourceDetailForm" class="source-detail-form">
+          <div class="detail-title-row">
+            <p class="field-label">Source details</p>
+            <span id="sourceQualityBadge" class="quality-badge"></span>
+          </div>
+          <label>Title <input id="detailTitle"></label>
+          <div class="detail-grid">
+            <label>Given <input id="detailAuthorGiven"></label>
+            <label>Family <input id="detailAuthorFamily"></label>
+          </div>
+          <div class="detail-grid">
+            <label>Year <input id="detailIssued" inputmode="numeric"></label>
+            <label>Type <select id="detailType"></select></label>
+          </div>
+          <label>Publication / site <input id="detailContainer"></label>
+          <label>DOI <input id="detailDoi"></label>
+          <label>URL <input id="detailUrl"></label>
+          <div class="action-row">
+            <button id="saveSourceDetail" type="submit">Save details</button>
+          </div>
+        </form>
+        <p class="field-label">Bibliography entry</p>
+        <div id="selectedEntry" class="entry-text"></div>
+        <p class="field-label">In-text citation</p>
+        <div id="selectedInText" class="intext-box"></div>
+        <div class="action-row">
+          <button id="copySelectedEntry">Copy reference</button>
+          <button id="copySelectedInText">Copy in-text</button>
+          <button id="editSelected">Edit</button>
+          <button id="deleteSelected" class="danger">Delete</button>
+        </div>
+        <div id="selectedSourceNotes" class="selected-source-notes"></div>
+      </div>
+    </section>
+
+    <section class="export-card">
+      <h3>Export</h3>
+      <div class="exports">
+        <button id="copyAll">Copy</button>
+        <button id="printPdf">PDF</button>
+        <button id="dlHtml">.html</button>
+        <button id="dlTxt">.txt</button>
+        <button id="dlRtf">.rtf</button>
+        <button id="dlBibtex">BibTeX</button>
+        <button id="dlJson">CSL-JSON</button>
+        <button id="importBtn">Import</button>
+        <input id="importFile" type="file" accept=".json,.bib,.bibtex,.txt" hidden>
+        <button id="dlLibrary">Backup</button>
+        <button id="importLibraryBtn">Restore</button>
+        <input id="importLibraryFile" type="file" accept=".json" hidden>
+      </div>
+    </section>
+
+  </aside>
+</div>
+
+<button id="notesBackdrop" class="notes-backdrop" type="button" aria-label="Close notes"></button>
+<aside id="notesDrawer" class="notes-drawer" aria-hidden="true">
+  <section class="notes-card">
+    <div class="section-head">
+      <h3>Notes</h3>
+      <button id="closeNotesDrawer" class="icon-button" type="button" aria-label="Close notes">×</button>
+    </div>
+    <span id="noteStatus" class="note-status">Saved locally</span>
+    <div id="noteList" class="note-list"></div>
+    <button id="addNote" class="add-note">+ Add note</button>
+  </section>
+</aside>
+
+<div id="toast" class="toast"></div>
+  <script type="module" src="app.js?v=drawer3"></script>
+</body>
+</html>

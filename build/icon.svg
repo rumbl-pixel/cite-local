@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="CiteLocal icon">
+  <defs>
+    <linearGradient id="mark" x1="170" y1="150" x2="850" y2="870" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4e8cff"/>
+      <stop offset="1" stop-color="#88e0b0"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="32" stdDeviation="34" flood-color="#000000" flood-opacity=".28"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="220" fill="#111820"/>
+  <rect x="144" y="144" width="736" height="736" rx="172" fill="url(#mark)" filter="url(#shadow)"/>
+  <path fill="#ffffff" d="M405 641c-44 0-80-13-108-39s-42-61-42-105c0-45 14-80 42-106s64-39 108-39c30 0 57 6 80 18 24 12 42 29 55 51l-64 39c-17-29-40-43-70-43-23 0-42 7-56 22-14 14-21 34-21 58 0 23 7 42 21 57s33 22 56 22c30 0 53-14 70-43l64 39c-13 22-31 39-55 51-23 12-50 18-80 18Zm202-284h74v218h137v61H607V357Z"/>
+</svg>

@@ -1,0 +1,68 @@
+{
+  "name": "cite-local",
+  "version": "1.0.0",
+  "description": "Local, offline citation and bibliography manager",
+  "author": "CiteLocal",
+  "license": "MIT",
+  "type": "module",
+  "main": "electron/main.js",
+  "scripts": {
+    "bootstrap": "node scripts/bootstrap.js",
+    "setup": "node setup.js",
+    "start": "node server.js",
+    "desktop": "electron .",
+    "desktop:smoke": "node scripts/desktop-smoke.js",
+    "doctor": "node scripts/release-doctor.js",
+    "verify": "npm test && npm run doctor && npm run desktop:smoke",
+    "pack": "electron-builder --dir",
+    "dist:win": "electron-builder --win nsis portable",
+    "dist:mac": "electron-builder --mac dmg zip",
+    "test": "node -e \"process.env.NODE_ENV='test'; import('./test.js')\""
+  },
+  "build": {
+    "appId": "com.citelocal.app",
+    "productName": "CiteLocal",
+    "asar": true,
+    "files": [
+      "electron/**/*",
+      "server.js",
+      "setup.js",
+      "styles-index.json",
+      "static/**/*",
+      "styles/**/*",
+      "locales/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "citelocal.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "build/icon.svg",
+      "category": "public.app-category.education"
+    }
+  },
+  "dependencies": {
+    "@citation-js/core": "^0.8.1",
+    "@citation-js/plugin-bibtex": "^0.8.1",
+    "@citation-js/plugin-csl": "^0.8.1",
+    "@citation-js/plugin-doi": "^0.8.1",
+    "cheerio": "^1.0.0",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3"
+  }
+}
