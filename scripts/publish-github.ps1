@@ -19,8 +19,14 @@ if ($LASTEXITCODE -ne 0) {
   exit 1
 }
 
-$existingRemote = git remote get-url origin 2>$null
-if ($LASTEXITCODE -eq 0 -and $existingRemote) {
+$existingRemote = ""
+cmd /c "git remote get-url origin > .git\citelocal-origin.tmp 2>nul"
+if ($LASTEXITCODE -eq 0) {
+  $existingRemote = Get-Content -Raw .git\citelocal-origin.tmp
+}
+Remove-Item .git\citelocal-origin.tmp -ErrorAction SilentlyContinue
+
+if ($existingRemote.Trim()) {
   git push -u origin main
   exit $LASTEXITCODE
 }
