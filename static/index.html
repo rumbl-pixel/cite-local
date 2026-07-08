@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CiteLocal Library</title>
   <link rel="stylesheet" href="style.css?v=drawer4">
-  <link rel="stylesheet" href="theme-workshop.css?v=1">
+  <link rel="stylesheet" href="vendor/reshaped-slate.theme.css?v=1">
+  <link rel="stylesheet" href="theme-workshop.css?v=3">
 </head>
-<body class="theme-workshop">
+<body class="theme-workshop" data-rs-theme="slate" data-rs-color-mode="dark">
 <div id="appHealth" class="app-health hidden"></div>
 <div id="appShell" class="app-shell">
   <aside id="projectRail" class="project-rail">
@@ -52,8 +53,14 @@
     </form>
     <p class="tool-section-label">Tools</p>
     <div id="toolTabs" class="tool-tabs" aria-label="Tools">
-      <button class="tool-tab" type="button" data-tool="word-count">Word count</button>
-      <button class="tool-tab" type="button" data-tool="pdf-tools">PDF tools</button>
+      <button class="tool-tab" type="button" data-tool="word-count" aria-label="Word count tool" title="Word count">
+        <span>Word</span>
+        <strong>Count</strong>
+      </button>
+      <button class="tool-tab" type="button" data-tool="pdf-tools" aria-label="PDF tools" title="PDF tools">
+        <span>PDF</span>
+        <strong>Tools</strong>
+      </button>
     </div>
     <p class="rail-label project-rail-label">Bibliographies</p>
     <div id="projectList" class="project-list"></div>

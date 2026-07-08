@@ -64,6 +64,7 @@ const htmlSource = await readFile('static/index.html', 'utf8');
 const appSource = await readFile('static/app.js', 'utf8');
 const cssSource = await readFile('static/style.css', 'utf8');
 const themeSource = await readFile('static/theme-workshop.css', 'utf8');
+const reshapedSlateThemeSource = await readFile('static/vendor/reshaped-slate.theme.css', 'utf8');
 const serverSource = await readFile('server.js', 'utf8');
 const electronMainSource = await readFile('electron/main.js', 'utf8');
 const desktopSmokeSource = await readFile('scripts/desktop-smoke.js', 'utf8');
@@ -164,9 +165,16 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   ['appHealth', 'appShell', 'projectRail', 'toggleRail', 'railSections', 'compactRailSections', 'newFolder', 'folderCreator', 'folderNameInput', 'saveFolder', 'cancelFolder', 'toolTabs', 'toolWorkspace', 'wordCountTool', 'pdfToolsPanel', 'pdfDropZone', 'pdfToolFile', 'pdfToolDrawer', 'togglePdfToolDrawer', 'closePdfToolDrawer', 'pdfToolStatus', 'restoreProj', 'sourceList', 'detailPanel', 'openNotesDrawer', 'notesBackdrop', 'notesDrawer', 'closeNotesDrawer', 'wordCountInput', 'wordCountTotal', 'wordCountClean', 'clearWordCount', 'noteList', 'addNote'].forEach(id => {
     assert.match(htmlSource, new RegExp(`id="${id}"`));
   });
-  assert.match(htmlSource, /<body class="theme-workshop">/);
+  assert.match(htmlSource, /<body class="theme-workshop"[^>]+data-rs-theme="slate"[^>]+data-rs-color-mode="dark"/);
   assert.match(htmlSource, /theme-workshop\.css\?v=\d+/);
-  assert.match(themeSource, /--rs-color-background-page/);
+  assert.match(htmlSource, /vendor\/reshaped-slate\.theme\.css\?v=\d+/);
+  assert.match(reshapedSlateThemeSource, /\[data-rs-theme~=slate\]/);
+  assert.match(reshapedSlateThemeSource, /\[data-rs-theme~=slate\]\[data-rs-color-mode=dark\]/);
+  assert.match(themeSource, /--rs-color-foreground-neutral/);
+  assert.match(reshapedSlateThemeSource, /--rs-color-background-primary:oklch\(0\.5498 0\.192 262\.67\)/);
+  assert.match(reshapedSlateThemeSource, /--rs-color-background-positive-faded/);
+  assert.match(reshapedSlateThemeSource, /--rs-color-background-warning-faded/);
+  assert.match(reshapedSlateThemeSource, /--rs-shadow-raised/);
   assert.match(htmlSource, /class="notes-toggle"/);
   assert.match(cssSource, /margin-bottom: 28px/);
   assert.match(cssSource, /--notes-drawer: clamp\(240px, 20vw, 280px\)/);
