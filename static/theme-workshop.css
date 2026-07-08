@@ -1,0 +1,429 @@
+/*
+  CiteLocal Workshop theme.
+  Aesthetic-only layer inspired by Reshaped's token-first approach:
+  semantic CSS variables, restrained surfaces, accessible states, and compact
+  product controls without changing app behavior.
+*/
+
+body.theme-workshop {
+  --rs-color-background-page: #0b1117;
+  --rs-color-background-neutral: #101820;
+  --rs-color-background-elevated: #151f29;
+  --rs-color-background-raised: #1b2835;
+  --rs-color-background-tool: #0f161e;
+  --rs-color-border-neutral: #263646;
+  --rs-color-border-strong: #3a5368;
+  --rs-color-foreground-neutral: #f3f7f3;
+  --rs-color-foreground-muted: #a4b0b8;
+  --rs-color-brand: #5a91ff;
+  --rs-color-brand-contrast: #f8fbff;
+  --rs-color-accent: #d6a84a;
+  --rs-color-accent-contrast: #111820;
+  --rs-color-positive: #83d5a0;
+  --rs-color-warning: #f2c462;
+  --rs-color-danger: #ef7770;
+  --rs-radius-small: 6px;
+  --rs-radius-medium: 9px;
+  --rs-radius-large: 14px;
+  --rs-shadow-raised: 0 18px 44px rgba(2, 8, 14, .34);
+  --rs-shadow-focus: 0 0 0 3px rgba(90, 145, 255, .2);
+  --rs-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, .035);
+
+  --bg: var(--rs-color-background-page);
+  --rail: #090f15;
+  --panel: var(--rs-color-background-elevated);
+  --panel-2: var(--rs-color-background-raised);
+  --ink: var(--rs-color-foreground-neutral);
+  --muted: var(--rs-color-foreground-muted);
+  --line: var(--rs-color-border-neutral);
+  --accent: var(--rs-color-brand);
+  --accent-ink: var(--rs-color-brand-contrast);
+  --danger: var(--rs-color-danger);
+  --shadow: var(--rs-shadow-raised);
+
+  color: var(--ink);
+  background:
+    linear-gradient(90deg, rgba(214, 168, 74, .05) 0 1px, transparent 1px 84px),
+    linear-gradient(180deg, rgba(255, 255, 255, .025) 0 1px, transparent 1px 72px),
+    var(--bg);
+  overflow-x: hidden;
+}
+
+body.theme-workshop button,
+body.theme-workshop input,
+body.theme-workshop select,
+body.theme-workshop textarea {
+  border-color: var(--rs-color-border-neutral);
+  border-radius: var(--rs-radius-medium);
+  background: var(--rs-color-background-tool);
+  color: var(--ink);
+  box-shadow: var(--rs-shadow-inset);
+}
+
+body.theme-workshop button {
+  min-height: 36px;
+  background: linear-gradient(180deg, #182433, #111a24);
+  transition: border-color .16s ease, background .16s ease, transform .16s ease, box-shadow .16s ease;
+}
+
+body.theme-workshop button:hover {
+  border-color: var(--rs-color-border-strong);
+  background: linear-gradient(180deg, #1d2c3c, #14202b);
+}
+
+body.theme-workshop button:active {
+  transform: translateY(1px);
+}
+
+body.theme-workshop button:focus,
+body.theme-workshop input:focus,
+body.theme-workshop select:focus,
+body.theme-workshop textarea:focus,
+body.theme-workshop .quality-badge[role="button"]:focus-visible {
+  outline: 0;
+  border-color: var(--rs-color-brand);
+  box-shadow: var(--rs-shadow-focus), var(--rs-shadow-inset);
+}
+
+body.theme-workshop ::placeholder {
+  color: #72818e;
+}
+
+body.theme-workshop .app-shell {
+  background: rgba(11, 17, 23, .72);
+}
+
+body.theme-workshop .project-rail,
+body.theme-workshop .detail-panel,
+body.theme-workshop .pdf-tool-drawer,
+body.theme-workshop .notes-drawer {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.026), transparent 38%),
+    var(--rail);
+}
+
+body.theme-workshop .project-rail {
+  border-right-color: #223142;
+  padding: 22px 16px;
+}
+
+body.theme-workshop .detail-panel,
+body.theme-workshop .pdf-tool-drawer,
+body.theme-workshop .notes-drawer {
+  border-left-color: #223142;
+}
+
+body.theme-workshop .brand {
+  padding: 0;
+}
+
+body.theme-workshop .mark {
+  border-radius: 12px;
+  background:
+    linear-gradient(135deg, var(--rs-color-brand), #76b0ff 58%, var(--rs-color-accent));
+  color: #071018;
+  box-shadow: 0 10px 28px rgba(90,145,255,.28);
+  letter-spacing: -.02em;
+}
+
+body.theme-workshop .brand h1,
+body.theme-workshop .project-name-input {
+  letter-spacing: 0;
+}
+
+body.theme-workshop .brand p,
+body.theme-workshop .project-meta-line,
+body.theme-workshop .eyebrow,
+body.theme-workshop .field-label,
+body.theme-workshop .rail-label,
+body.theme-workshop .tool-section-label,
+body.theme-workshop .source-section h3,
+body.theme-workshop .detail-panel h3,
+body.theme-workshop .pdf-tool-drawer h3 {
+  color: var(--muted);
+}
+
+body.theme-workshop .rail-sections,
+body.theme-workshop .tool-tabs {
+  padding: 5px;
+  border: 1px solid rgba(38, 54, 70, .7);
+  border-radius: 12px;
+  background: rgba(15, 22, 30, .72);
+}
+
+body.theme-workshop .rail-section,
+body.theme-workshop .tool-tab,
+body.theme-workshop .compact-rail-section {
+  border-color: transparent;
+  background: transparent;
+}
+
+body.theme-workshop .rail-section.active,
+body.theme-workshop .tool-tab.active,
+body.theme-workshop .compact-rail-section.active {
+  border-color: rgba(214, 168, 74, .38);
+  background: rgba(214, 168, 74, .13);
+  color: #ffe1a0;
+}
+
+body.theme-workshop .rail-actions {
+  gap: 7px;
+}
+
+body.theme-workshop .rail-actions #newProj,
+body.theme-workshop #omniGo,
+body.theme-workshop #addManual,
+body.theme-workshop #addCaptureCandidate {
+  border-color: rgba(90, 145, 255, .85);
+  background: linear-gradient(180deg, #679dff, #4c82f2);
+  color: var(--rs-color-brand-contrast);
+  box-shadow: 0 12px 28px rgba(76, 130, 242, .25);
+}
+
+body.theme-workshop .rail-actions #newProj:hover,
+body.theme-workshop #omniGo:hover,
+body.theme-workshop #addManual:hover,
+body.theme-workshop #addCaptureCandidate:hover {
+  background: linear-gradient(180deg, #77a9ff, #5a91ff);
+}
+
+body.theme-workshop .rail-actions #delProj,
+body.theme-workshop .note-remove,
+body.theme-workshop button.danger {
+  color: #ffaaa5;
+}
+
+body.theme-workshop .folder-block {
+  border-radius: 12px;
+}
+
+body.theme-workshop .folder-block.active {
+  border-color: rgba(214, 168, 74, .22);
+  background: rgba(214, 168, 74, .07);
+}
+
+body.theme-workshop .folder-heading,
+body.theme-workshop .project-item,
+body.theme-workshop .storage-card,
+body.theme-workshop .result-card,
+body.theme-workshop .source-row,
+body.theme-workshop .note-row,
+body.theme-workshop .linked-note {
+  border-color: transparent;
+  border-radius: var(--rs-radius-medium);
+  background: transparent;
+  box-shadow: none;
+}
+
+body.theme-workshop .project-item:hover,
+body.theme-workshop .folder-heading:hover,
+body.theme-workshop .source-row:hover,
+body.theme-workshop .result-card:hover {
+  background: rgba(255, 255, 255, .035);
+}
+
+body.theme-workshop .project-item.active,
+body.theme-workshop .source-row.active,
+body.theme-workshop .result-card.active {
+  border-color: rgba(90, 145, 255, .55);
+  background: rgba(90, 145, 255, .12);
+  box-shadow: inset 3px 0 0 var(--rs-color-brand);
+}
+
+body.theme-workshop .library-pane {
+  padding: 32px 38px;
+}
+
+body.theme-workshop .library-header {
+  align-items: flex-start;
+  padding-bottom: 4px;
+}
+
+body.theme-workshop .project-name-input {
+  min-height: 64px;
+  color: #f7faf6;
+}
+
+body.theme-workshop .project-name-input:focus {
+  box-shadow: inset 0 -2px 0 var(--rs-color-accent);
+}
+
+body.theme-workshop #stylePreset,
+body.theme-workshop .unit-code-input,
+body.theme-workshop #sourceSearch {
+  background: #0d141c;
+}
+
+body.theme-workshop .capture-panel,
+body.theme-workshop .source-section,
+body.theme-workshop .preview-card,
+body.theme-workshop .export-card,
+body.theme-workshop .notes-card,
+body.theme-workshop .pdf-tool-group,
+body.theme-workshop .capture-review,
+body.theme-workshop .word-counter,
+body.theme-workshop .pdf-drop-zone,
+body.theme-workshop .ghost-card {
+  border-color: rgba(38, 54, 70, .78);
+  border-radius: var(--rs-radius-large);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.035), transparent 44%),
+    var(--panel);
+  box-shadow: var(--rs-shadow-raised), var(--rs-shadow-inset);
+}
+
+body.theme-workshop .capture-panel,
+body.theme-workshop .source-section,
+body.theme-workshop .preview-card,
+body.theme-workshop .notes-card {
+  position: relative;
+}
+
+body.theme-workshop .capture-panel::before,
+body.theme-workshop .source-section::before,
+body.theme-workshop .preview-card::before,
+body.theme-workshop .notes-card::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 20px;
+  display: block;
+  width: 34px;
+  height: 3px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--rs-color-accent);
+  opacity: .72;
+}
+
+body.theme-workshop .omnibox input {
+  min-height: 44px;
+  padding-inline: 14px;
+  background: #090f15;
+  border-color: #2e4052;
+}
+
+body.theme-workshop .capture-workbench {
+  border-top: 1px solid rgba(38, 54, 70, .62);
+  padding-top: 14px;
+}
+
+body.theme-workshop details {
+  border-top-color: rgba(38, 54, 70, .62);
+}
+
+body.theme-workshop summary {
+  color: #9ebfff;
+}
+
+body.theme-workshop .source-section {
+  min-height: 390px;
+}
+
+body.theme-workshop .source-list {
+  gap: 6px;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(9, 15, 21, .38);
+}
+
+body.theme-workshop .source-row {
+  padding: 15px 16px;
+}
+
+body.theme-workshop .source-row b,
+body.theme-workshop .result-card b,
+body.theme-workshop .project-item span,
+body.theme-workshop .folder-heading span {
+  color: #f8fbff;
+}
+
+body.theme-workshop .quality-badge {
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+body.theme-workshop .quality-badge.ok {
+  color: #a9e6bd;
+  border-color: rgba(131, 213, 160, .34);
+  background: rgba(131, 213, 160, .12);
+}
+
+body.theme-workshop .quality-badge.warn,
+body.theme-workshop #reviewFilter.active {
+  color: #ffd984;
+  border-color: rgba(214, 168, 74, .45);
+  background: rgba(214, 168, 74, .13);
+}
+
+body.theme-workshop .entry-text,
+body.theme-workshop .intext-box {
+  border-color: rgba(38, 54, 70, .72);
+  border-radius: var(--rs-radius-medium);
+  background: #0a1017;
+}
+
+body.theme-workshop .entry-text {
+  border-left: 3px solid var(--rs-color-accent);
+}
+
+body.theme-workshop .action-row button:first-child,
+body.theme-workshop #copySelectedInText {
+  border-color: rgba(214, 168, 74, .42);
+  background: rgba(214, 168, 74, .12);
+  color: #ffdc96;
+}
+
+body.theme-workshop .notes-toggle,
+body.theme-workshop .add-note,
+body.theme-workshop .folder-add {
+  border-color: rgba(90, 145, 255, .4);
+  color: #bfd4ff;
+}
+
+body.theme-workshop .export-card {
+  background: transparent;
+  border-color: rgba(38, 54, 70, .5);
+  box-shadow: none;
+}
+
+body.theme-workshop .export-menu summary {
+  color: #b7c3cc;
+}
+
+body.theme-workshop .pdf-drawer-tab {
+  border-color: rgba(214, 168, 74, .34);
+  background: rgba(214, 168, 74, .12);
+  color: #ffdc96;
+}
+
+body.theme-workshop .pdf-tool.planned,
+body.theme-workshop .pdf-tool:disabled {
+  background: rgba(255,255,255,.025);
+  color: #8e9ba6;
+  opacity: .72;
+}
+
+body.theme-workshop .pdf-tool-status {
+  border-color: rgba(38, 54, 70, .72);
+  background: #0a1017;
+}
+
+body.theme-workshop .toast {
+  border: 1px solid rgba(214, 168, 74, .34);
+  background: #f5f0e3;
+  color: #111820;
+}
+
+@media (max-width: 760px) {
+  body.theme-workshop .library-pane {
+    padding: 18px 14px;
+  }
+
+  body.theme-workshop .capture-panel,
+  body.theme-workshop .source-section,
+  body.theme-workshop .preview-card,
+  body.theme-workshop .notes-card {
+    border-radius: 12px;
+  }
+}

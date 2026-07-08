@@ -63,6 +63,7 @@ const styleIds = new Set(JSON.parse(await readFile('styles-index.json', 'utf8'))
 const htmlSource = await readFile('static/index.html', 'utf8');
 const appSource = await readFile('static/app.js', 'utf8');
 const cssSource = await readFile('static/style.css', 'utf8');
+const themeSource = await readFile('static/theme-workshop.css', 'utf8');
 const serverSource = await readFile('server.js', 'utf8');
 const electronMainSource = await readFile('electron/main.js', 'utf8');
 const desktopSmokeSource = await readFile('scripts/desktop-smoke.js', 'utf8');
@@ -161,6 +162,9 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   ['appHealth', 'appShell', 'projectRail', 'toggleRail', 'railSections', 'compactRailSections', 'newFolder', 'folderCreator', 'folderNameInput', 'saveFolder', 'cancelFolder', 'toolTabs', 'toolWorkspace', 'wordCountTool', 'pdfToolsPanel', 'pdfDropZone', 'pdfToolFile', 'pdfToolDrawer', 'togglePdfToolDrawer', 'closePdfToolDrawer', 'pdfToolStatus', 'restoreProj', 'sourceList', 'detailPanel', 'openNotesDrawer', 'notesBackdrop', 'notesDrawer', 'closeNotesDrawer', 'wordCountInput', 'wordCountTotal', 'wordCountClean', 'clearWordCount', 'noteList', 'addNote'].forEach(id => {
     assert.match(htmlSource, new RegExp(`id="${id}"`));
   });
+  assert.match(htmlSource, /<body class="theme-workshop">/);
+  assert.match(htmlSource, /theme-workshop\.css\?v=\d+/);
+  assert.match(themeSource, /--rs-color-background-page/);
   assert.match(htmlSource, /class="notes-toggle"/);
   assert.match(cssSource, /margin-bottom: 28px/);
   assert.match(cssSource, /--notes-drawer: clamp\(240px, 20vw, 280px\)/);
