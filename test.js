@@ -5,7 +5,10 @@ import vm from 'node:vm';
 import * as cheerio from 'cheerio';
 import { Cite, plugins } from '@citation-js/core';
 import '@citation-js/plugin-csl';
-import { defaultLibrary, extractCSL, nameToCSL, normalizeLibrary, parseDate } from './server.js';
+
+process.env.NODE_ENV = 'test';
+
+const { defaultLibrary, extractCSL, nameToCSL, normalizeLibrary, parseDate } = await import('./server.js');
 
 let failed = 0;
 const check = (name, fn) => { try { fn(); console.log('  ok  ' + name); } catch (e) { failed++; console.log('FAIL  ' + name + ' — ' + e.message); } };
@@ -62,8 +65,7 @@ const mla = await formatWith('modern-language-association', book);
 const styleIds = new Set(JSON.parse(await readFile('styles-index.json', 'utf8')).map(s => s.id));
 const htmlSource = await readFile('static/index.html', 'utf8');
 const appSource = await readFile('static/app.js', 'utf8');
-const cssSource = await readFile('static/style.css', 'utf8');
-const themeSource = await readFile('static/theme-workshop.css', 'utf8');
+const cssSource = await readFile('static/theme.css', 'utf8');
 const reshapedSlateThemeSource = await readFile('static/vendor/reshaped-slate.theme.css', 'utf8');
 const serverSource = await readFile('server.js', 'utf8');
 const electronMainSource = await readFile('electron/main.js', 'utf8');
@@ -165,12 +167,13 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   ['appHealth', 'appShell', 'projectRail', 'toggleRail', 'railSections', 'compactRailSections', 'newFolder', 'folderCreator', 'folderNameInput', 'saveFolder', 'cancelFolder', 'libraryHeader', 'toolTabs', 'toolWorkspace', 'wordCountTool', 'pdfToolsPanel', 'pdfDropZone', 'pdfToolFile', 'pdfToolDrawer', 'togglePdfToolDrawer', 'closePdfToolDrawer', 'pdfToolStatus', 'restoreProj', 'sourceList', 'detailPanel', 'openNotesDrawer', 'notesBackdrop', 'notesDrawer', 'closeNotesDrawer', 'wordCountInput', 'wordCountTotal', 'wordCountClean', 'clearWordCount', 'noteList', 'addNote'].forEach(id => {
     assert.match(htmlSource, new RegExp(`id="${id}"`));
   });
-  assert.match(htmlSource, /<body class="theme-workshop"[^>]+data-rs-theme="slate"[^>]+data-rs-color-mode="dark"/);
-  assert.match(htmlSource, /theme-workshop\.css\?v=\d+/);
+  assert.match(htmlSource, /<body data-rs-theme="slate" data-rs-color-mode="dark"/);
+  assert.match(htmlSource, /theme\.css\?v=\d+/);
   assert.match(htmlSource, /vendor\/reshaped-slate\.theme\.css\?v=\d+/);
+  assert.doesNotMatch(htmlSource, /theme-workshop/);
   assert.match(reshapedSlateThemeSource, /\[data-rs-theme~=slate\]/);
   assert.match(reshapedSlateThemeSource, /\[data-rs-theme~=slate\]\[data-rs-color-mode=dark\]/);
-  assert.match(themeSource, /--rs-color-foreground-neutral/);
+  assert.match(cssSource, /--rs-color-foreground-neutral/);
   assert.match(reshapedSlateThemeSource, /--rs-color-background-primary:oklch\(0\.5498 0\.192 262\.67\)/);
   assert.match(reshapedSlateThemeSource, /--rs-color-background-positive-faded/);
   assert.match(reshapedSlateThemeSource, /--rs-color-background-warning-faded/);
@@ -179,12 +182,30 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.doesNotMatch(htmlSource, /id="openPdfActions"/);
   assert.doesNotMatch(htmlSource, /class="pdf-actions-toggle"/);
   assert.match(htmlSource, /id="newFolder"[^>]+class="icon-action"[\s\S]*<svg viewBox="0 0 24 24"/);
-  assert.match(cssSource, /margin-bottom: 28px/);
+  // Consolidated single-stylesheet design (HANDOFF-DESIGN.md): every color/spacing/radius
+  // resolves to a --rs-* token — no parallel token system, no hex/rgba/gradient literals.
+  // oklch(from var(--rs-...) ...) is Reshaped's real relative-color syntax
+  // (derives from a token, not a literal) — allowed. A hardcoded oklch(<n> <n> <n>)
+  // literal, or any hex/rgb/hsl literal, is not.
+  assert.doesNotMatch(cssSource, /#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/);
+  assert.doesNotMatch(cssSource.replace(/oklch\(from var\([^)]+\)[^)]*\)/g, ''), /oklch\(/);
+  assert.doesNotMatch(cssSource, /backdrop-filter/);
+  // Gradients/glow are real Reshaped visual language (verified against
+  // reshaped.so's own production CSS) and used deliberately here — the
+  // dot-grid canvas texture, scroll-edge fade masks, and the primary-blue
+  // washes/highlights on the rail, brand mark, and active states. The rule
+  // is every gradient stop must be token-derived (var(--rs-...) or
+  // color-mix(...var(--rs-...)...)), never a raw hex/rgb/hsl literal.
+  const gradientLines = cssSource.match(/[^\n]*gradient\([^\n]*/g) || [];
+  assert.ok(gradientLines.length > 0, 'expected the dot-grid + fade-mask + glow gradients');
+  for (const line of gradientLines) {
+    assert.match(line, /var\(--rs-/, `unexpected gradient not built from tokens: ${line}`);
+  }
+  assert.match(cssSource, /margin-bottom: var\(--rs-unit-x5\)/);
   assert.match(cssSource, /--notes-drawer: clamp\(240px, 20vw, 280px\)/);
   assert.match(cssSource, /body\.notes-open \.app-shell \{/);
-  assert.match(cssSource, /grid-template-columns: clamp\(220px, 16vw, 260px\) minmax\(360px, 1fr\) clamp\(230px, 20vw, 300px\) var\(--notes-drawer\)/);
-  assert.match(cssSource, /grid-template-columns: 68px minmax\(480px, 1fr\) clamp\(230px, 20vw, 300px\) var\(--notes-drawer\)/);
-  assert.match(cssSource, /body\.notes-open \{ --notes-drawer: 220px; \}/);
+  assert.match(cssSource, /grid-template-columns: clamp\(204px, 15vw, 240px\) minmax\(360px, 1fr\) clamp\(240px, 21vw, 300px\) var\(--notes-drawer\)/);
+  assert.match(cssSource, /grid-template-columns: 68px minmax\(420px, 1fr\) clamp\(240px, 21vw, 300px\) var\(--notes-drawer\)/);
   assert.match(cssSource, /body\.notes-open \.project-rail/);
   assert.match(cssSource, /body\.notes-open \.notes-backdrop/);
   assert.match(cssSource, /body\.notes-open \.notes-drawer/);
@@ -197,7 +218,6 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(cssSource, /\.folder-block/);
   assert.match(cssSource, /\.folder-add/);
   assert.match(cssSource, /\.folder-creator/);
-  assert.match(cssSource, /overflow-x: hidden/);
   assert.match(htmlSource, /data-tool="word-count"/);
   assert.match(htmlSource, /data-tool="pdf-tools"/);
   assert.match(htmlSource, /class="word-counter word-counter-page"/);
@@ -210,22 +230,25 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(htmlSource, /Merge PDFs/);
   assert.match(htmlSource, /OCR PDF/);
   assert.match(htmlSource, /PDF to Word/);
-  assert.match(cssSource, /grid-template-columns: clamp\(220px, 16vw, 260px\) minmax\(620px, 1fr\) clamp\(300px, 22vw, 350px\) 54px/);
+  assert.match(cssSource, /grid-template-columns: clamp\(220px, 16vw, 260px\) minmax\(560px, 1fr\) clamp\(300px, 24vw, 360px\)/);
   assert.match(htmlSource, /id="pdfToolDrawerContent"[^>]+aria-hidden="true"/);
   assert.match(cssSource, /\.export-card \{/);
   assert.match(cssSource, /width: fit-content/);
   assert.match(cssSource, /max-width: 260px/);
   assert.match(cssSource, /align-self: start/);
-  assert.match(themeSource, /body\.theme-workshop\.tool-mode \.library-header\s*\{\s*display: none;/);
-  assert.match(themeSource, /body\.theme-workshop \.workspace-head\s*\{[\s\S]*grid-template-columns: minmax\(0, 1fr\) auto;/);
-  assert.match(themeSource, /body\.theme-workshop \.icon-action svg\s*\{/);
-  assert.match(themeSource, /body\.theme-workshop \.source-list\s*\{[\s\S]*grid-template-columns: repeat\(auto-fit, minmax\(min\(100%, 300px\), 1fr\)\);/);
-  assert.match(themeSource, /body\.theme-workshop \.source-row\s*\{[\s\S]*grid-template-columns: minmax\(0, 1fr\);/);
-  assert.match(themeSource, /body\.theme-workshop \.source-row b\s*\{[\s\S]*white-space: normal;[\s\S]*overflow-wrap: anywhere;/);
-  assert.match(themeSource, /body\.theme-workshop \.source-row span\s*\{[\s\S]*white-space: normal;[\s\S]*overflow-wrap: anywhere;/);
-  assert.match(themeSource, /body\.theme-workshop \.tool-tab\s*\{[\s\S]*min-height: 42px;/);
-  assert.match(themeSource, /body\.theme-workshop\.pdf-tool-mode \.pdf-tool-drawer\.collapsed\s*\{[\s\S]*display: grid;/);
-  assert.match(themeSource, /body\.theme-workshop\.pdf-tool-mode \.pdf-tool-drawer\.collapsed \.pdf-drawer-tab\s*\{[\s\S]*display: grid;/);
+  assert.match(cssSource, /body\.tool-mode \.library-header\s*\{\s*display: none;/);
+  assert.match(cssSource, /\.workspace-head\s*\{[\s\S]*?margin-bottom: var\(--rs-unit-x5\);/);
+  assert.match(cssSource, /\.icon-action svg, \.compact-rail-section svg\s*\{/);
+  assert.match(cssSource, /\.source-list\s*\{[\s\S]*?grid-template-columns: repeat\(auto-fit, minmax\(min\(100%, 300px\), 1fr\)\);/);
+  assert.match(cssSource, /\.source-row\s*\{[\s\S]*?grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(cssSource, /\.source-row b\s*\{[\s\S]*?white-space: normal;[\s\S]*?overflow-wrap: anywhere;/);
+  assert.match(cssSource, /\.source-row span\s*\{[\s\S]*?white-space: normal;[\s\S]*?overflow-wrap: anywhere;/);
+  assert.match(cssSource, /\.tool-tab\s*\{[\s\S]*?min-height: 56px;/);
+  // v4: tool tabs are square 2-up tiles at normal rail width; only the
+  // narrow 176px rail breakpoint (1050px viewport) falls back to one column.
+  assert.match(cssSource, /\.tool-tabs \{ grid-template-columns: repeat\(2, minmax\(0, 1fr\)\); \}/);
+  assert.match(cssSource, /@media \(max-width: 1050px\) \{[\s\S]*?\.tool-tabs \{ grid-template-columns: 1fr; \}/);
+  assert.match(cssSource, /body\.pdf-tool-mode \.pdf-tool-drawer\.collapsed\s*\{[\s\S]*?display: grid;/);
   assert.match(appSource, /const TOOL_STATE_KEY = 'citelocal-tool-state';/);
   assert.match(appSource, /function loadToolState\(\)/);
   assert.match(appSource, /function saveToolState\(\)/);
