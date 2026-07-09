@@ -140,6 +140,7 @@ check('desktop app shell is configured for Mac and Windows local runs', () => {
   assert.match(macIconSource, /viewBox="0 0 1024 1024"/);
   assert.match(electronMainSource, /CITELOCAL_DATA_DIR/);
   assert.match(electronMainSource, /CITELOCAL_SMOKE_TEST/);
+  assert.match(electronMainSource, /disable-gpu/);
   assert.match(desktopSmokeSource, /CITELOCAL_DESKTOP_READY/);
   assert.match(releaseDoctorSource, /Release doctor passed/);
   assert.match(bootstrapSource, /citation-style-language\/styles/);

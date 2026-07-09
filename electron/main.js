@@ -3,6 +3,10 @@ import { join } from 'node:path';
 
 let server;
 
+if (process.env.CITELOCAL_SMOKE_TEST === '1') {
+  app.commandLine.appendSwitch('disable-gpu');
+}
+
 async function createWindow() {
   process.env.CITELOCAL_DATA_DIR = join(app.getPath('userData'), 'data');
   process.env.CITELOCAL_NO_AUTO_START = '1';
