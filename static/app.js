@@ -11,7 +11,21 @@ function el(t, p = {}) {
   return node;
 }
 const KEY = 'citelocal';
+const TOOL_STATE_KEY = 'citelocal-tool-state';
 const api = (u, o) => fetch(u, o).then(r => r.ok ? r.json() : r.json().then(e => Promise.reject(e)));
+
+function loadToolState() {
+  try {
+    return JSON.parse(localStorage.getItem(TOOL_STATE_KEY) || '{}') || {};
+  } catch {
+    return {};
+  }
+}
+function saveToolState() {
+  try {
+    localStorage.setItem(TOOL_STATE_KEY, JSON.stringify(toolState));
+  } catch {}
+}
 
 let db = defaultLibrary();
 let formatData = { bibliography: [], citations: [] };
@@ -27,6 +41,7 @@ let activeFolder = 'General';
 let activeTool = '';
 let pdfDrawerExpanded = false;
 let selectedPdfFile = null;
+let toolState = loadToolState();
 let storageInfo = { dataDir: '', libraryFile: '' };
 let appHealth = { ok: true };
 
@@ -264,6 +279,7 @@ function ensureActiveProjectVisible() {
 }
 function setRailSection(section) {
   activeTool = '';
+  pdfDrawerExpanded = false;
   activeRailSection = section;
   ensureActiveProjectVisible();
   renderAll();
@@ -276,18 +292,23 @@ function setActiveTool(tool) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function setPdfDrawerExpanded(next) {
-  pdfDrawerExpanded = next;
-  activeTool = next ? 'pdf-tools' : '';
+  if (next && activeTool !== 'pdf-tools') return;
+  pdfDrawerExpanded = Boolean(next);
   if (next) setNotesDrawerOpen(false);
   renderToolWorkspace();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function renderToolWorkspace() {
   const active = Boolean(activeTool);
-  const pdfMode = pdfDrawerExpanded;
+  const pdfMode = activeTool === 'pdf-tools' && pdfDrawerExpanded;
+  pdfDrawerExpanded = pdfMode;
   document.body.classList.toggle('tool-mode', active);
+  document.body.classList.toggle('pdf-tool-mode', activeTool === 'pdf-tools');
   document.body.classList.toggle('pdf-drawer-expanded', pdfMode);
+  $('#libraryHeader').classList.toggle('hidden', active);
+  $('#libraryHeader').setAttribute('aria-hidden', String(active));
   $('#toolWorkspace').classList.toggle('hidden', !active);
+  $('#toolWorkspace').setAttribute('aria-hidden', String(!active));
   $('#capturePanel').classList.toggle('hidden', active);
   $('#sourceSection').classList.toggle('hidden', active);
   $('#detailPanel').classList.toggle('hidden', active);
@@ -296,7 +317,9 @@ function renderToolWorkspace() {
   $('#togglePdfToolDrawer').setAttribute('aria-expanded', String(pdfMode));
   $('#pdfToolDrawerContent').setAttribute('aria-hidden', String(!pdfMode));
   $('#wordCountTool').classList.toggle('hidden', activeTool !== 'word-count');
+  $('#wordCountTool').setAttribute('aria-hidden', String(activeTool !== 'word-count'));
   $('#pdfToolsPanel').classList.toggle('hidden', activeTool !== 'pdf-tools');
+  $('#pdfToolsPanel').setAttribute('aria-hidden', String(activeTool !== 'pdf-tools'));
   document.querySelectorAll('.tool-tab').forEach(button => {
     const on = button.dataset.tool === activeTool;
     button.classList.toggle('active', on);
@@ -324,12 +347,14 @@ $('#toolTabs').onclick = e => {
   setActiveTool(button.dataset.tool || '');
 };
 $('#closeToolWorkspace').onclick = () => setActiveTool('');
-$('#closePdfTools').onclick = () => setPdfDrawerExpanded(false);
+$('#closePdfTools').onclick = () => setActiveTool('');
 $('#closePdfToolDrawer').onclick = () => setPdfDrawerExpanded(false);
 $('#togglePdfToolDrawer').onclick = () => setPdfDrawerExpanded(!pdfDrawerExpanded);
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && notesDrawerOpen) setNotesDrawerOpen(false);
-  if (e.key === 'Escape' && activeTool) setPdfDrawerExpanded(false);
+  if (e.key !== 'Escape') return;
+  if (notesDrawerOpen) return setNotesDrawerOpen(false);
+  if (pdfDrawerExpanded) return setPdfDrawerExpanded(false);
+  if (activeTool) setActiveTool('');
 });
 
 // ---- projects ----
@@ -992,6 +1017,8 @@ function countWords(text) {
 }
 function renderWordCount() {
   const text = $('#wordCountInput').value;
+  toolState.wordCountText = text;
+  saveToolState();
   $('#wordCountTotal').textContent = String(countWords(text));
   $('#wordCountClean').textContent = String(countWords(textWithoutParentheses(text)));
 }
@@ -1003,6 +1030,14 @@ $('#clearWordCount').onclick = () => {
 };
 function setPdfFile(file) {
   selectedPdfFile = file || null;
+  if (selectedPdfFile) {
+    toolState.pdfFileName = selectedPdfFile.name;
+    toolState.pdfFileSize = selectedPdfFile.size;
+  } else {
+    delete toolState.pdfFileName;
+    delete toolState.pdfFileSize;
+  }
+  saveToolState();
   $('#pdfToolFileStatus').textContent = selectedPdfFile
     ? `${selectedPdfFile.name} · ${Math.max(1, Math.round(selectedPdfFile.size / 1024))} KB`
     : 'or click to choose one from your computer';
@@ -1010,9 +1045,13 @@ function setPdfFile(file) {
 }
 function selectPdfTool(toolName) {
   const label = toolName.replace(/-/g, ' ');
-  $('#pdfToolStatus').textContent = selectedPdfFile
+  const message = selectedPdfFile
     ? `${selectedPdfFile.name} is ready for ${label}. Local processing will run through the PDF tools backend.`
     : `Choose a PDF before using ${label}.`;
+  toolState.pdfToolStatus = message;
+  toolState.pdfTool = toolName;
+  saveToolState();
+  $('#pdfToolStatus').textContent = message;
 }
 $('#pdfDropZone').onclick = () => $('#pdfToolFile').click();
 $('#pdfDropZone').onkeydown = e => {
@@ -1274,6 +1313,15 @@ function renderAll() {
   renderBiblio();
   renderToolWorkspace();
 }
+function restoreToolDrafts() {
+  $('#wordCountInput').value = toolState.wordCountText || '';
+  renderWordCount();
+  if (toolState.pdfFileName && !selectedPdfFile) {
+    const size = toolState.pdfFileSize ? ` - ${Math.max(1, Math.round(toolState.pdfFileSize / 1024))} KB` : '';
+    $('#pdfToolFileStatus').textContent = `Last selected: ${toolState.pdfFileName}${size}. Choose it again after reload.`;
+  }
+  if (toolState.pdfToolStatus) $('#pdfToolStatus').textContent = toolState.pdfToolStatus;
+}
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
 
 await loadLibrary();
@@ -1285,6 +1333,7 @@ bindProjectMeta();
 renderProjects();
 buildTypeSelect();
 buildDetailTypeSelect();
+restoreToolDrafts();
 renderNotes();
 renderBiblio();
 renderToolWorkspace();

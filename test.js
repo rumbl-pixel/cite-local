@@ -162,7 +162,7 @@ check('server exposes local storage folder APIs for desktop library files', () =
   assert.match(serverSource, /\/api\/health/);
 });
 check('app shell exposes local library, citation workspace, and notepad regions', () => {
-  ['appHealth', 'appShell', 'projectRail', 'toggleRail', 'railSections', 'compactRailSections', 'newFolder', 'folderCreator', 'folderNameInput', 'saveFolder', 'cancelFolder', 'toolTabs', 'toolWorkspace', 'wordCountTool', 'pdfToolsPanel', 'pdfDropZone', 'pdfToolFile', 'pdfToolDrawer', 'togglePdfToolDrawer', 'closePdfToolDrawer', 'pdfToolStatus', 'restoreProj', 'sourceList', 'detailPanel', 'openNotesDrawer', 'notesBackdrop', 'notesDrawer', 'closeNotesDrawer', 'wordCountInput', 'wordCountTotal', 'wordCountClean', 'clearWordCount', 'noteList', 'addNote'].forEach(id => {
+  ['appHealth', 'appShell', 'projectRail', 'toggleRail', 'railSections', 'compactRailSections', 'newFolder', 'folderCreator', 'folderNameInput', 'saveFolder', 'cancelFolder', 'libraryHeader', 'toolTabs', 'toolWorkspace', 'wordCountTool', 'pdfToolsPanel', 'pdfDropZone', 'pdfToolFile', 'pdfToolDrawer', 'togglePdfToolDrawer', 'closePdfToolDrawer', 'pdfToolStatus', 'restoreProj', 'sourceList', 'detailPanel', 'openNotesDrawer', 'notesBackdrop', 'notesDrawer', 'closeNotesDrawer', 'wordCountInput', 'wordCountTotal', 'wordCountClean', 'clearWordCount', 'noteList', 'addNote'].forEach(id => {
     assert.match(htmlSource, new RegExp(`id="${id}"`));
   });
   assert.match(htmlSource, /<body class="theme-workshop"[^>]+data-rs-theme="slate"[^>]+data-rs-color-mode="dark"/);
@@ -176,6 +176,9 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(reshapedSlateThemeSource, /--rs-color-background-warning-faded/);
   assert.match(reshapedSlateThemeSource, /--rs-shadow-raised/);
   assert.match(htmlSource, /class="notes-toggle"/);
+  assert.doesNotMatch(htmlSource, /id="openPdfActions"/);
+  assert.doesNotMatch(htmlSource, /class="pdf-actions-toggle"/);
+  assert.match(htmlSource, /id="newFolder"[^>]+class="icon-action"[\s\S]*<svg viewBox="0 0 24 24"/);
   assert.match(cssSource, /margin-bottom: 28px/);
   assert.match(cssSource, /--notes-drawer: clamp\(240px, 20vw, 280px\)/);
   assert.match(cssSource, /body\.notes-open \.app-shell \{/);
@@ -187,6 +190,7 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(cssSource, /body\.notes-open \.notes-drawer/);
   assert.match(cssSource, /body\.notes-open \.pdf-tool-drawer/);
   assert.match(cssSource, /body\.pdf-drawer-expanded \.library-pane/);
+  assert.doesNotMatch(cssSource, /pdf-drawer-expanded:not\(\.tool-mode\)/);
   assert.match(cssSource, /\.pdf-tool-drawer/);
   assert.match(cssSource, /\.pdf-tool-drawer\.collapsed/);
   assert.match(cssSource, /\.pdf-drawer-tab/);
@@ -212,8 +216,27 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(cssSource, /width: fit-content/);
   assert.match(cssSource, /max-width: 260px/);
   assert.match(cssSource, /align-self: start/);
+  assert.match(themeSource, /body\.theme-workshop\.tool-mode \.library-header\s*\{\s*display: none;/);
+  assert.match(themeSource, /body\.theme-workshop \.workspace-head\s*\{[\s\S]*grid-template-columns: minmax\(0, 1fr\) auto;/);
+  assert.match(themeSource, /body\.theme-workshop \.icon-action svg\s*\{/);
+  assert.match(themeSource, /body\.theme-workshop \.source-list\s*\{[\s\S]*grid-template-columns: repeat\(auto-fit, minmax\(min\(100%, 300px\), 1fr\)\);/);
+  assert.match(themeSource, /body\.theme-workshop \.source-row\s*\{[\s\S]*grid-template-columns: minmax\(0, 1fr\);/);
+  assert.match(themeSource, /body\.theme-workshop \.source-row b\s*\{[\s\S]*white-space: normal;[\s\S]*overflow-wrap: anywhere;/);
+  assert.match(themeSource, /body\.theme-workshop \.source-row span\s*\{[\s\S]*white-space: normal;[\s\S]*overflow-wrap: anywhere;/);
+  assert.match(themeSource, /body\.theme-workshop \.tool-tab\s*\{[\s\S]*min-height: 42px;/);
+  assert.match(themeSource, /body\.theme-workshop\.pdf-tool-mode \.pdf-tool-drawer\.collapsed\s*\{[\s\S]*display: grid;/);
+  assert.match(themeSource, /body\.theme-workshop\.pdf-tool-mode \.pdf-tool-drawer\.collapsed \.pdf-drawer-tab\s*\{[\s\S]*display: grid;/);
+  assert.match(appSource, /const TOOL_STATE_KEY = 'citelocal-tool-state';/);
+  assert.match(appSource, /function loadToolState\(\)/);
+  assert.match(appSource, /function saveToolState\(\)/);
+  assert.match(appSource, /function restoreToolDrafts\(\)/);
+  assert.match(appSource, /toolState\.wordCountText = text;/);
+  assert.match(appSource, /document\.body\.classList\.toggle\('pdf-tool-mode', activeTool === 'pdf-tools'\);/);
+  assert.match(appSource, /if \(next && activeTool !== 'pdf-tools'\) return;/);
+  assert.doesNotMatch(appSource, /openPdfActions/);
+  assert.match(appSource, /\$\('#closePdfTools'\)\.onclick = \(\) => setActiveTool\(''\);/);
   assert.match(htmlSource, /<script type="module" src="app\.js\?v=drawer\d+"><\/script>/);
-  ['saveLibrary', 'renderSourceList', 'renderNotes', 'setRailCollapsed', 'setNotesDrawerOpen', 'compactRailSections', 'notesBackdrop', 'renderLibrarySections', 'setRailSection', 'setActiveTool', 'setPdfDrawerExpanded', 'renderToolWorkspace', 'setPdfFile', 'selectPdfTool', 'visibleProjectIndexes', 'libraryFolders', 'ensureFolder', 'renderFolderBlock', 'createFolder', 'createProject', 'loadStorageInfo', 'loadAppHealth', 'renderAppHealth', 'openDataFolder', 'textWithoutParentheses', 'countWords', 'renderWordCount'].forEach(name => assert.match(appSource, new RegExp(name)));
+  ['saveLibrary', 'renderSourceList', 'renderNotes', 'setRailCollapsed', 'setNotesDrawerOpen', 'compactRailSections', 'notesBackdrop', 'renderLibrarySections', 'setRailSection', 'setActiveTool', 'setPdfDrawerExpanded', 'renderToolWorkspace', 'setPdfFile', 'selectPdfTool', 'visibleProjectIndexes', 'libraryFolders', 'ensureFolder', 'renderFolderBlock', 'createFolder', 'createProject', 'loadStorageInfo', 'loadAppHealth', 'renderAppHealth', 'openDataFolder', 'textWithoutParentheses', 'countWords', 'renderWordCount', 'restoreToolDrafts'].forEach(name => assert.match(appSource, new RegExp(name)));
 });
 check('notes can be added as rows and linked to saved sources', () => {
   assert.match(htmlSource, /id="selectedSourceNotes"/);
