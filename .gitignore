@@ -10,3 +10,10 @@ data/*.backup.json
 npm-debug.log*
 .DS_Store
 Thumbs.db
+
+# Internal handoff and audit notes
+CLAUDE-HANDOFF-AUDIT.md
+HANDOFF-CODEX.md
+HANDOFF-CODEX-V2.md
+HANDOFF-DESIGN.md
+INSTRUCTIONS-CODEX.md
