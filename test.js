@@ -209,9 +209,16 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(cssSource, /html \{[\s\S]*?background-color: var\(--canvas-fallback\);/);
   assert.match(appSource, /function onKeyboardActivate/);
   assert.match(appSource, /onKeyboardActivate\(\$\('#openNotesDrawer'\),/);
+  assert.match(cssSource, /\.drawer-collapse \{[\s\S]*?background: var\(--rs-color-background-elevation-base\);/);
   assert.match(cssSource, /body\.notes-open \.app-shell \{/);
   assert.match(cssSource, /grid-template-columns: clamp\(204px, 15vw, 240px\) minmax\(360px, 1fr\) clamp\(240px, 21vw, 300px\) var\(--notes-drawer\)/);
   assert.match(cssSource, /grid-template-columns: 68px minmax\(420px, 1fr\) clamp\(240px, 21vw, 300px\) var\(--notes-drawer\)/);
+  assert.match(cssSource, /\.detail-panel\s*\{[\s\S]*?min-width: 0; overflow-x: hidden;/);
+  assert.match(cssSource, /\.entry-text, \.intext-box, \.pdf-tool-status\s*\{[\s\S]*?overflow-wrap: anywhere;/);
+  assert.match(cssSource, /body\.pdf-drawer-expanded\.pdf-tool-mode \.app-shell \{ grid-template-columns: 68px minmax\(360px, 1fr\) minmax\(240px, 260px\); \}/);
+  assert.match(cssSource, /body\.notes-open \{ --notes-drawer: clamp\(240px, 30vw, 260px\); \}/);
+  assert.match(cssSource, /body\.notes-open \.detail-panel \{ display: none; \}/);
+  assert.match(cssSource, /body\.notes-open \.notes-drawer \{ grid-column: 3; \}/);
   assert.match(cssSource, /body\.notes-open \.project-rail/);
   assert.match(cssSource, /body\.notes-open \.notes-backdrop/);
   assert.match(cssSource, /body\.notes-open \.notes-drawer/);

@@ -178,6 +178,12 @@ body.notes-open .app-shell.rail-collapsed {
 .brand p { margin: var(--rs-unit-x0-5) 0 0; color: var(--rs-color-foreground-neutral-faded); font-size: var(--rs-font-size-caption-1); }
 
 .icon-button, .icon-action { width: 34px; height: 34px; display: grid; place-items: center; padding: 0; min-height: 0; }
+.drawer-collapse {
+  border-color: var(--hairline);
+  background: var(--rs-color-background-elevation-base);
+  color: var(--rs-color-foreground-neutral);
+  font-size: var(--rs-font-size-body-1);
+}
 .icon-action svg, .compact-rail-section svg {
   width: 20px; height: 20px; fill: none; stroke: currentColor;
   stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
@@ -476,7 +482,7 @@ details label { display: block; margin: var(--rs-unit-x3) 0 var(--rs-unit-x1-5);
   display: grid; grid-template-rows: minmax(220px, auto) auto;
   align-content: start; align-items: start;
   gap: var(--rs-unit-x4);
-  min-width: 0;
+  min-width: 0; overflow-x: hidden;
 }
 .preview-card { min-width: 0; }
 .workspace-head { align-items: flex-start; gap: var(--rs-unit-x3); margin-bottom: var(--rs-unit-x5); border: 0; background: transparent; padding: 0; }
@@ -489,7 +495,7 @@ details label { display: block; margin: var(--rs-unit-x3) 0 var(--rs-unit-x1-5);
 .detail-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--rs-unit-x3); margin-top: var(--rs-unit-x2); }
 .detail-title-row .field-label { margin: 0; }
 .source-detail-form label { display: grid; gap: var(--rs-unit-x1); color: var(--rs-color-foreground-neutral-faded); font-size: var(--rs-font-size-caption-1); }
-.source-detail-form input, .source-detail-form select { width: 100%; color: var(--rs-color-foreground-neutral); }
+.source-detail-form input, .source-detail-form select { width: 100%; min-width: 0; color: var(--rs-color-foreground-neutral); }
 .source-detail-form input.review-focus { outline: 2px solid var(--rs-color-border-warning); outline-offset: 2px; }
 .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--rs-unit-x2); }
 
@@ -499,6 +505,7 @@ details label { display: block; margin: var(--rs-unit-x3) 0 var(--rs-unit-x1-5);
   border: 1px solid var(--hairline);
   border-radius: var(--rs-radius-medium);
   color: var(--rs-color-foreground-neutral);
+  overflow-wrap: anywhere;
 }
 .entry-text .csl-entry { margin: 0; }
 .intext-box { font-style: normal; }
@@ -633,9 +640,13 @@ body.notes-open .pdf-tool-drawer { display: none; }
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, var(--rs-color-black) var(--rs-unit-x2), var(--rs-color-black) calc(100% - var(--rs-unit-x2)), transparent 100%);
   mask-image: linear-gradient(to bottom, transparent 0, var(--rs-color-black) var(--rs-unit-x2), var(--rs-color-black) calc(100% - var(--rs-unit-x2)), transparent 100%);
 }
-.note-row { display: grid; gap: var(--rs-unit-x2); padding: var(--rs-unit-x3); border: 1px solid var(--hairline); border-radius: var(--rs-radius-medium); background: var(--rs-color-background-neutral-faded); }
-.note-text, .note-source { width: 100%; }
+.note-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--rs-unit-x2);
+  padding: var(--rs-unit-x3); border: 1px solid var(--hairline); border-radius: var(--rs-radius-medium); background: var(--rs-color-background-neutral-faded);
+}
+.note-text, .note-source { width: 100%; grid-column: 1 / -1; min-width: 0; }
 .note-open, .note-remove { justify-self: start; padding: var(--rs-unit-x1) var(--rs-unit-x2); min-height: 0; font-size: var(--rs-font-size-caption-1); }
+.note-remove { justify-self: end; }
 .add-note { width: 100%; border: 1px dashed var(--hairline-strong); }
 
 .ghost-card {
@@ -683,11 +694,13 @@ body.notes-open .pdf-tool-drawer { display: none; }
   .app-shell { grid-template-columns: 176px minmax(380px, 1fr) minmax(210px, 243px); }
   body.pdf-tool-mode .app-shell { grid-template-columns: 176px minmax(380px, 1fr) 54px; }
   body.pdf-drawer-expanded .app-shell,
-  body.pdf-drawer-expanded.pdf-tool-mode .app-shell { grid-template-columns: 176px minmax(350px, 1fr) minmax(280px, 293px); }
+  body.pdf-drawer-expanded.pdf-tool-mode .app-shell { grid-template-columns: 68px minmax(360px, 1fr) minmax(240px, 260px); }
   .app-shell.rail-collapsed { grid-template-columns: 68px minmax(380px, 1fr) minmax(210px, 243px); }
-  body.notes-open { --notes-drawer: clamp(220px, 24vw, 240px); }
+  body.notes-open { --notes-drawer: clamp(240px, 30vw, 260px); }
   body.notes-open .app-shell,
-  body.notes-open .app-shell.rail-collapsed { grid-template-columns: 68px minmax(300px, 1fr) minmax(190px, 230px) var(--notes-drawer); }
+  body.notes-open .app-shell.rail-collapsed { grid-template-columns: 68px minmax(360px, 1fr) var(--notes-drawer); }
+  body.notes-open .detail-panel { display: none; }
+  body.notes-open .notes-drawer { grid-column: 3; }
 
   body.pdf-drawer-expanded .project-rail,
   body.notes-open .project-rail { align-items: center; }
