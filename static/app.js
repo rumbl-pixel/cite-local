@@ -10,6 +10,14 @@ function el(t, p = {}) {
   });
   return node;
 }
+function onKeyboardActivate(node, action) {
+  node.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      action(e);
+    }
+  });
+}
 const KEY = 'citelocal';
 const TOOL_STATE_KEY = 'citelocal-tool-state';
 const api = (u, o) => fetch(u, o).then(r => r.ok ? r.json() : r.json().then(e => Promise.reject(e)));
@@ -328,7 +336,9 @@ function renderToolWorkspace() {
 }
 $('#toggleRail').onclick = () => setRailCollapsed(!railCollapsed);
 $('#openNotesDrawer').onclick = () => setNotesDrawerOpen(true);
+onKeyboardActivate($('#openNotesDrawer'), () => setNotesDrawerOpen(true));
 $('#closeNotesDrawer').onclick = () => setNotesDrawerOpen(false);
+onKeyboardActivate($('#closeNotesDrawer'), () => setNotesDrawerOpen(false));
 $('#notesBackdrop').onclick = () => setNotesDrawerOpen(false);
 $('#railSections').onclick = e => {
   const button = e.target.closest('.rail-section');
@@ -1078,7 +1088,7 @@ $('#pdfToolDrawer').onclick = e => {
   document.querySelectorAll('.pdf-tool').forEach(b => b.classList.toggle('active', b === button));
   selectPdfTool(button.dataset.pdfTool || button.textContent.trim());
 };
-$('#addNote').onclick = () => {
+function addLinkedNote() {
   const selected = selectedSource();
   setNotesDrawerOpen(true);
   proj().notes.push({ id: 'note-' + Math.random().toString(36).slice(2, 9), text: '', sourceId: selected?.id || '' });
@@ -1086,7 +1096,9 @@ $('#addNote').onclick = () => {
   saveNotesNow();
   const fields = document.querySelectorAll('.note-text');
   fields[fields.length - 1]?.focus();
-};
+}
+$('#addNote').onclick = addLinkedNote;
+onKeyboardActivate($('#addNote'), addLinkedNote);
 function sourceNotesFor(sourceId) {
   return proj().notes.filter(note => note.sourceId === sourceId && note.text.trim());
 }

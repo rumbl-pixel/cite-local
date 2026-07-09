@@ -203,6 +203,11 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   }
   assert.match(cssSource, /margin-bottom: var\(--rs-unit-x5\)/);
   assert.match(cssSource, /--notes-drawer: clamp\(240px, 20vw, 280px\)/);
+  assert.match(htmlSource, /<html[^>]+data-rs-theme="slate"[^>]+data-rs-color-mode="dark"/);
+  assert.match(cssSource, /--canvas-fallback: var\(--rs-color-background-neutral\)/);
+  assert.match(cssSource, /html \{[\s\S]*?background-color: var\(--canvas-fallback\);/);
+  assert.match(appSource, /function onKeyboardActivate/);
+  assert.match(appSource, /onKeyboardActivate\(\$\('#openNotesDrawer'\),/);
   assert.match(cssSource, /body\.notes-open \.app-shell \{/);
   assert.match(cssSource, /grid-template-columns: clamp\(204px, 15vw, 240px\) minmax\(360px, 1fr\) clamp\(240px, 21vw, 300px\) var\(--notes-drawer\)/);
   assert.match(cssSource, /grid-template-columns: 68px minmax\(420px, 1fr\) clamp\(240px, 21vw, 300px\) var\(--notes-drawer\)/);

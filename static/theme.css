@@ -12,6 +12,7 @@
   --notes-drawer: clamp(240px, 20vw, 280px);
   --hairline: var(--rs-color-border-neutral-faded);
   --hairline-strong: var(--rs-color-border-neutral);
+  --canvas-fallback: var(--rs-color-background-neutral);
   /* A lighter charcoal-grey canvas tone (vs. the vendor's near-black page
      token) so the page itself reads as "dark grey", and cards/inputs sitting
      below it in the elevation ladder look pressed-in/defined against it. */
@@ -20,10 +21,15 @@
 
 * { box-sizing: border-box; }
 
+html {
+  background-color: var(--canvas-fallback);
+}
+
 body {
   margin: 0;
   min-height: 100vh;
   color: var(--rs-color-foreground-neutral);
+  background-color: var(--canvas-fallback);
   /* Subtle blue wash so the app reads as "dark, blue-tinted product" rather
      than flat black — same move reshaped.so's own hero makes, scaled down. */
   background:
@@ -145,6 +151,7 @@ body.notes-open .app-shell.rail-collapsed {
 /* ---------- left rail ---------- */
 
 .project-rail {
+  background-color: var(--canvas-fallback);
   background:
     linear-gradient(180deg, color-mix(in oklab, var(--rs-color-background-primary) 9%, transparent), transparent 240px),
     var(--canvas);
@@ -462,6 +469,7 @@ details label { display: block; margin: var(--rs-unit-x3) 0 var(--rs-unit-x1-5);
 
 .detail-panel {
   grid-column: 3; grid-row: 1;
+  background-color: var(--canvas-fallback);
   background: var(--canvas);
   border-left: 1px solid var(--hairline);
   padding: var(--rs-unit-x6) var(--rs-unit-x5);
@@ -517,6 +525,7 @@ details label { display: block; margin: var(--rs-unit-x3) 0 var(--rs-unit-x1-5);
 
 .pdf-tool-drawer {
   grid-column: 3; grid-row: 1;
+  background-color: var(--canvas-fallback);
   background: var(--canvas);
   border-left: 1px solid var(--hairline);
   padding: var(--rs-unit-x6) var(--rs-unit-x4);
@@ -671,13 +680,14 @@ body.notes-open .pdf-tool-drawer { display: none; }
   /* Rail narrows to 176px here — two square tool tiles don't fit side by side. */
   .tool-tabs { grid-template-columns: 1fr; }
   .tool-tab { min-height: 40px; display: flex; align-items: center; gap: var(--rs-unit-x2); }
-  .app-shell { grid-template-columns: 176px minmax(400px, 1fr) minmax(220px, 243px); }
-  body.pdf-tool-mode .app-shell { grid-template-columns: 176px minmax(400px, 1fr) 54px; }
+  .app-shell { grid-template-columns: 176px minmax(380px, 1fr) minmax(210px, 243px); }
+  body.pdf-tool-mode .app-shell { grid-template-columns: 176px minmax(380px, 1fr) 54px; }
   body.pdf-drawer-expanded .app-shell,
   body.pdf-drawer-expanded.pdf-tool-mode .app-shell { grid-template-columns: 176px minmax(350px, 1fr) minmax(280px, 293px); }
-  .app-shell.rail-collapsed { grid-template-columns: 68px minmax(400px, 1fr) minmax(220px, 243px); }
+  .app-shell.rail-collapsed { grid-template-columns: 68px minmax(380px, 1fr) minmax(210px, 243px); }
+  body.notes-open { --notes-drawer: clamp(220px, 24vw, 240px); }
   body.notes-open .app-shell,
-  body.notes-open .app-shell.rail-collapsed { grid-template-columns: 68px minmax(350px, 1fr) minmax(230px, 270px) var(--notes-drawer); }
+  body.notes-open .app-shell.rail-collapsed { grid-template-columns: 68px minmax(300px, 1fr) minmax(190px, 230px) var(--notes-drawer); }
 
   body.pdf-drawer-expanded .project-rail,
   body.notes-open .project-rail { align-items: center; }
