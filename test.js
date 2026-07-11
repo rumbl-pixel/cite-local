@@ -223,7 +223,7 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(cssSource, /body\.notes-open \.notes-backdrop/);
   assert.match(cssSource, /body\.notes-open \.notes-drawer/);
   assert.match(cssSource, /body\.notes-open \.pdf-tool-drawer/);
-  assert.match(cssSource, /body\.pdf-drawer-expanded \.library-pane/);
+  assert.match(cssSource, /body\.pdf-tool-mode \.library-pane/);
   assert.doesNotMatch(cssSource, /pdf-drawer-expanded:not\(\.tool-mode\)/);
   assert.match(cssSource, /\.pdf-tool-drawer/);
   assert.match(cssSource, /\.pdf-tool-drawer\.collapsed/);

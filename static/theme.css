@@ -316,7 +316,7 @@ body.notes-open .app-shell.rail-collapsed {
   min-width: 0;
 }
 body.tool-mode .library-pane { grid-column: 2 / 4; }
-body.pdf-drawer-expanded .library-pane { grid-column: 2; }
+body.pdf-tool-mode .library-pane { grid-column: 2; }
 
 .library-header, .section-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -624,6 +624,7 @@ body.pdf-drawer-expanded .pdf-tool-drawer { grid-column: 3; }
 }
 .notes-drawer {
   display: none; grid-column: 4; grid-row: 1; min-width: 0; height: 100vh;
+  position: sticky; top: 0;
   padding: var(--rs-unit-x3);
   background: var(--rs-color-background-elevation-raised);
   border-left: 1px solid var(--hairline);
