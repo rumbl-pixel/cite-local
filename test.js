@@ -510,5 +510,23 @@ check('a doi.org URL routes through DOI lookup, not the page scraper', () => {
   assert.match(doiUrlBranch, /api\('\/api\/lookup\?doi=/, 'doi.org branch must call the DOI lookup API, not the scraper');
 });
 
+// --- renderBiblio must guard against out-of-order responses. Styles
+// lazy-load their .csl file on first use, so switching styles rapidly (e.g.
+// a never-used style then quickly back to an already-cached one) can let a
+// slower earlier request resolve after a faster later one and silently
+// overwrite the UI with stale, wrong-style citations. ---
+check('renderBiblio discards stale out-of-order /api/format responses', () => {
+  const fnStart = appSource.indexOf('async function renderBiblio(');
+  assert.notStrictEqual(fnStart, -1, 'renderBiblio not found');
+  const fnEnd = appSource.indexOf('\nfunction selectedIndex', fnStart);
+  assert.notStrictEqual(fnEnd, -1, 'end of renderBiblio not found');
+  const fnBody = appSource.slice(fnStart, fnEnd);
+  assert.match(fnBody, /const requestId = \+\+formatRequestSeq;/, 'must snapshot a request sequence number before the async call');
+  const apiCallIdx = fnBody.indexOf("api('/api/format'");
+  assert.notStrictEqual(apiCallIdx, -1, '/api/format call not found');
+  const afterApiCall = fnBody.slice(apiCallIdx);
+  assert.match(afterApiCall, /requestId !== formatRequestSeq/, 'must check the sequence number is still current before applying the response');
+});
+
 console.log(`\n${failed ? failed + ' FAILED' : 'all checks passed'}`);
 process.exit(failed ? 1 : 0);

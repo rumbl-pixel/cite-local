@@ -37,6 +37,7 @@ function saveToolState() {
 
 let db = defaultLibrary();
 let formatData = { bibliography: [], citations: [] };
+let formatRequestSeq = 0;
 let captureCandidates = [];
 let selectedCapture = -1;
 let saveT;
@@ -817,6 +818,12 @@ function focusSourceReview(src = selectedSource()) {
 }
 async function renderBiblio() {
   const srcs = proj().sources;
+  // Styles lazy-load their .csl file from disk on first use, so switching to
+  // a never-used style (e.g. Chicago Notes) is measurably slower than an
+  // already-cached one. Without a sequence guard, a slow request for an
+  // earlier style selection can resolve after a faster later one and
+  // silently overwrite the UI with stale, wrong-style citations.
+  const requestId = ++formatRequestSeq;
   formatData = { bibliography: [], citations: [] };
   if (!srcs.length) {
     renderSourceList();
@@ -824,12 +831,15 @@ async function renderBiblio() {
     return;
   }
   try {
-    formatData = await api('/api/format', {
+    const result = await api('/api/format', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items: srcs, style: proj().style || 'apa' }),
     });
+    if (requestId !== formatRequestSeq) return; // a newer request has since started — discard this stale response
+    formatData = result;
   } catch (e) {
+    if (requestId !== formatRequestSeq) return;
     toast('Formatting failed: ' + (e.error || 'error'));
   }
   renderSourceList();
