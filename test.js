@@ -478,5 +478,24 @@ check('PDF drop zone rejects non-PDF files instead of silently accepting them', 
   assert.match(dropBody, /toast\(/, 'must show feedback when the dropped file is rejected');
 });
 
+// --- pasting a doi.org link (the most common way DOIs are shared) must
+// resolve via the real DOI API, not the generic scraper — doi.org sits
+// behind a bot challenge that silently returns a Cloudflare page as "the
+// source" (verified live: title became "Attention Required! | Cloudflare",
+// zero authors). ---
+check('a doi.org URL routes through DOI lookup, not the page scraper', () => {
+  const fnStart = appSource.indexOf('async function runOmni(');
+  assert.notStrictEqual(fnStart, -1, 'runOmni not found');
+  const fnBody = appSource.slice(fnStart, fnStart + 1200);
+  const doiUrlMatchIdx = fnBody.indexOf('doiUrlMatch');
+  const scrapeApiIdx = fnBody.indexOf("api('/api/scrape?url=");
+  assert.notStrictEqual(doiUrlMatchIdx, -1, 'no doiUrlMatch branch found');
+  assert.notStrictEqual(scrapeApiIdx, -1, 'no /api/scrape call found');
+  assert.ok(doiUrlMatchIdx < scrapeApiIdx, 'doi.org detection must be checked before the generic URL/scrape branch');
+  const doiUrlBranch = fnBody.slice(doiUrlMatchIdx, scrapeApiIdx);
+  assert.ok(doiUrlBranch.includes('doi') && doiUrlBranch.includes('.org'), 'the branch must actually detect doi.org URLs');
+  assert.match(doiUrlBranch, /api\('\/api\/lookup\?doi=/, 'doi.org branch must call the DOI lookup API, not the scraper');
+});
+
 console.log(`\n${failed ? failed + ' FAILED' : 'all checks passed'}`);
 process.exit(failed ? 1 : 0);
