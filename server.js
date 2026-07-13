@@ -334,6 +334,14 @@ app.get('/api/scrape', async (req, res) => {
       redirect: 'follow',
       headers: { 'User-Agent': 'Mozilla/5.0 (CiteLocal metadata fetch)' },
     });
+    // A direct PDF/binary link decoded as text and parsed as HTML finds no
+    // real metadata anywhere, so extractCSL falls all the way through to
+    // "title: the raw URL" — a low-quality result that looks like it worked.
+    // Fail clearly instead so the user tries the DOI or manual entry.
+    const contentType = r.headers.get('content-type') || '';
+    if (!contentType.includes('html')) {
+      return res.status(415).json({ error: `that link isn't a web page (content-type: ${contentType.split(';')[0] || 'unknown'}) — try the DOI, or add it manually` });
+    }
     const html = await r.text();
     res.json(extractCSL(cheerio.load(html), url));
   } catch (e) {

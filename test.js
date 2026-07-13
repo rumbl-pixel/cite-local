@@ -165,6 +165,19 @@ check('server exposes local storage folder APIs for desktop library files', () =
   assert.match(serverSource, /function writeClipboard/);
   assert.match(serverSource, /\/api\/health/);
 });
+// A direct PDF/binary link decoded as text and parsed as HTML finds no real
+// metadata, so extractCSL used to silently fall through to "title: the raw
+// URL" — a low-quality result indistinguishable from a real success. The
+// scrape route must reject non-HTML responses before ever calling extractCSL.
+check('/api/scrape rejects non-HTML content-types before parsing', () => {
+  const scrapeStart = serverSource.indexOf("app.get('/api/scrape'");
+  assert.notStrictEqual(scrapeStart, -1, '/api/scrape route not found');
+  const nextRouteStart = serverSource.indexOf('\napp.', scrapeStart + 1);
+  const scrapeBody = serverSource.slice(scrapeStart, nextRouteStart === -1 ? undefined : nextRouteStart);
+  const guardIdx = scrapeBody.indexOf("contentType.includes('html')");
+  const parseIdx = scrapeBody.indexOf('extractCSL(cheerio.load');
+  assert.ok(guardIdx !== -1 && parseIdx !== -1 && guardIdx < parseIdx, 'content-type guard must run before extractCSL parses the body');
+});
 check('app shell exposes local library, citation workspace, and notepad regions', () => {
   ['appHealth', 'appShell', 'projectRail', 'toggleRail', 'railSections', 'compactRailSections', 'newFolder', 'folderCreator', 'folderNameInput', 'saveFolder', 'cancelFolder', 'libraryHeader', 'toolTabs', 'toolWorkspace', 'wordCountTool', 'pdfToolsPanel', 'pdfDropZone', 'pdfToolFile', 'pdfToolDrawer', 'togglePdfToolDrawer', 'closePdfToolDrawer', 'pdfToolStatus', 'restoreProj', 'sourceList', 'detailPanel', 'openNotesDrawer', 'notesBackdrop', 'notesDrawer', 'closeNotesDrawer', 'wordCountInput', 'wordCountTotal', 'wordCountClean', 'clearWordCount', 'noteList', 'addNote'].forEach(id => {
     assert.match(htmlSource, new RegExp(`id="${id}"`));
