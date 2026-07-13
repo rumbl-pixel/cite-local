@@ -309,8 +309,30 @@ check('source list exposes quality review markers for incomplete metadata', () =
   ['sourceQuality', 'qualityBadge', 'focusSourceReview', 'reviewTargetForMissing', 'showNeedsReviewOnly'].forEach(name => {
     assert.match(appSource, new RegExp(name));
   });
-  assert.match(appSource, /role="button"/);
-  assert.match(appSource, /tabindex="0"/);
+  // The detail panel's badge is a real static element with its own keydown
+  // handler — that's where role="button"/tabindex="0" belong.
+  assert.match(appSource, /\$\('#sourceQualityBadge'\)\.onkeydown/);
+});
+check('qualityBadge() row markup is not a nested focusable control', () => {
+  // qualityBadge() renders inside renderSourceList's <button> row — a
+  // role="button" tabindex="0" span there is invalid nesting AND a dead
+  // keyboard stop, since no keydown handler ever reaches a dynamically
+  // innerHTML'd span. Mouse users keep click-to-review via closest();
+  // keyboard users use the detail panel's badge instead.
+  const start = appSource.indexOf('function qualityBadge(src) {');
+  const end = appSource.indexOf('\nfunction ', start + 1);
+  const body = appSource.slice(start, end);
+  assert.doesNotMatch(body, /role="button"|tabindex="0"/);
+});
+check('primary form controls have accessible names, not just placeholders', () => {
+  // Placeholders disappear on input and are unreliably announced by screen
+  // readers — the omnibox, source search, and style picker each need a real
+  // accessible name (aria-label or a wrapping <label>).
+  [
+    /<input id="omni"[^>]*aria-label=/,
+    /<input id="sourceSearch"[^>]*aria-label=/,
+    /<select id="stylePreset"[^>]*aria-label=/,
+  ].forEach(re => assert.match(htmlSource, re));
 });
 check('capture flow exposes selectable review panel before adding sources', () => {
   ['captureReview', 'capturePreviewTitle', 'addCaptureCandidate', 'captureDuplicateNotice', 'openExistingCapture', 'mergeCaptureCandidate'].forEach(id => {

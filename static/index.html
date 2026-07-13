@@ -78,7 +78,7 @@
           <p id="projectMetaLine" class="project-meta-line"></p>
         </div>
       </div>
-      <select id="stylePreset" title="Common citation style"></select>
+      <select id="stylePreset" aria-label="Citation style" title="Common citation style"></select>
     </header>
 
     <section id="toolWorkspace" class="tool-workspace hidden" aria-live="polite">
@@ -117,7 +117,7 @@
 
     <section id="capturePanel" class="capture-panel">
       <div class="omnibox">
-        <input id="omni" placeholder="Paste a URL, DOI, ISBN, or search by title">
+        <input id="omni" aria-label="Paste a URL, DOI, ISBN, or search by title" placeholder="Paste a URL, DOI, ISBN, or search by title">
         <button id="omniGo">Capture</button>
       </div>
       <div class="capture-workbench">
@@ -154,7 +154,7 @@
         <h3>Sources <span id="count" class="count"></span></h3>
         <div class="source-tools">
           <button id="reviewFilter" type="button" aria-pressed="false">Needs review</button>
-          <input id="sourceSearch" placeholder="Search this bibliography">
+          <input id="sourceSearch" aria-label="Search this bibliography" placeholder="Search this bibliography">
         </div>
       </div>
       <div id="sourceList" class="source-list"></div>
@@ -296,6 +296,6 @@
 <button id="notesBackdrop" class="notes-backdrop" type="button" aria-label="Close notes"></button>
 
 <div id="toast" class="toast"></div>
-  <script type="module" src="app.js?v=drawer8"></script>
+  <script type="module" src="app.js?v=drawer9"></script>
 </body>
 </html>

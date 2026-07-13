@@ -802,8 +802,13 @@ function sourceQuality(src) {
 function qualityBadge(src) {
   const q = sourceQuality(src);
   const title = q.missing.length ? `Missing ${q.missing.join(', ')}` : 'Core citation fields present';
-  const interactive = q.missing.length ? ' role="button" tabindex="0" aria-label="Review missing source details"' : '';
-  return `<span class="quality-badge ${q.missing.length ? 'warn' : 'ok'}" title="${esc(title)}"${interactive}>${q.label}</span>`;
+  // Nested inside the source-row <button> (renderSourceList) — making this
+  // span separately focusable would be invalid nesting AND a dead keyboard
+  // stop (no keydown handler reaches a dynamically-innerHTML'd span).
+  // Mouse users still get click-to-review via e.target.closest(); keyboard
+  // users select the row, then use the detail panel's own badge, which is
+  // a real focusable element with a working keydown handler.
+  return `<span class="quality-badge ${q.missing.length ? 'warn' : 'ok'}" title="${esc(title)}">${q.label}</span>`;
 }
 function reviewTargetForMissing(src) {
   const [missing] = sourceQuality(src).missing;
