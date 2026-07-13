@@ -893,13 +893,23 @@ function collectSourceDetail(src) {
   const out = { ...src };
   out.title = $('#detailTitle').value.trim();
   out.type = $('#detailType').value || 'document';
+  // This quick-edit form only exposes the FIRST author and the YEAR. Rebuild
+  // just author[0] and keep any co-authors (author[1..]) intact — otherwise
+  // editing a title typo on a multi-author source silently deletes every
+  // other author. Same silent-data-loss class as the stale-edit-pointer bug.
   const given = $('#detailAuthorGiven').value.trim();
   const family = $('#detailAuthorFamily').value.trim();
-  if (given || family) out.author = [given ? { given, family } : { literal: family }];
+  const restAuthors = Array.isArray(src.author) ? src.author.slice(1) : [];
+  if (given || family) out.author = [given ? { given, family } : { literal: family }, ...restAuthors];
+  else if (restAuthors.length) out.author = restAuthors;
   else delete out.author;
+  // Likewise, the form shows only the year. If the year is unchanged, keep the
+  // original full date (month/day) instead of truncating it to year-only.
   const year = Number($('#detailIssued').value.trim());
-  if (year) out.issued = { 'date-parts': [[year]] };
-  else delete out.issued;
+  if (year) {
+    const origParts = src.issued?.['date-parts']?.[0] || [];
+    out.issued = (origParts[0] === year && origParts.length > 1) ? src.issued : { 'date-parts': [[year]] };
+  } else delete out.issued;
   const container = $('#detailContainer').value.trim();
   if (container) out['container-title'] = container;
   else delete out['container-title'];

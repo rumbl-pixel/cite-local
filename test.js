@@ -573,6 +573,44 @@ check('switching the active bibliography clears any pending manual-edit pointer'
   assert.notStrictEqual(onclickIdx, -1, 'project switch onclick not found');
   assert.match(fnBody.slice(onclickIdx), /addManual'\)\.dataset\.edit = ''/, 'switching projects must clear the stale edit pointer');
 });
+// collectSourceDetail() reads only from $(...).value, so we can run the real
+// function against a stubbed $ and assert on its output. The quick-edit detail
+// panel exposes ONLY the first author and the year — saving must not silently
+// destroy co-authors or truncate a full date (same data-loss class as the
+// stale-edit-pointer bug fixed in 4825a43).
+function makeCollectSourceDetail(fields) {
+  const start = appSource.indexOf('function collectSourceDetail(src) {');
+  const end = appSource.indexOf('\nfunction ', start + 1);
+  const fnSrc = appSource.slice(start, end);
+  const make = new Function('$', fnSrc + '\nreturn collectSourceDetail;');
+  return make(sel => ({ value: fields[sel] ?? '' }));
+}
+check('detail-panel save preserves co-authors and an unchanged full date', () => {
+  const collect = makeCollectSourceDetail({
+    '#detailTitle': 'Edited Title', '#detailType': 'article-journal',
+    '#detailAuthorGiven': 'Ada', '#detailAuthorFamily': 'Lovelace',
+    '#detailIssued': '2020', '#detailContainer': 'Journal of Things',
+    '#detailDoi': '', '#detailUrl': '',
+  });
+  const out = collect({
+    id: 'x', type: 'article-journal', title: 'Old',
+    author: [{ given: 'Ada', family: 'Lovelace' }, { given: 'Charles', family: 'Babbage' }, { literal: 'NASA' }],
+    issued: { 'date-parts': [[2020, 6, 15]] },
+  });
+  assert.strictEqual(out.author.length, 3, 'editing via the quick form must not delete co-authors');
+  assert.deepStrictEqual(out.author[2], { literal: 'NASA' }, 'trailing authors preserved verbatim');
+  assert.deepStrictEqual(out.issued['date-parts'][0], [2020, 6, 15], 'unchanged year keeps the original month/day');
+});
+check('detail-panel save falls back to year-only when the year actually changes', () => {
+  const collect = makeCollectSourceDetail({
+    '#detailTitle': 'T', '#detailType': 'article-journal',
+    '#detailAuthorGiven': 'Ada', '#detailAuthorFamily': 'Lovelace',
+    '#detailIssued': '2021', '#detailContainer': '', '#detailDoi': '', '#detailUrl': '',
+  });
+  const out = collect({ id: 'x', type: 'article-journal', title: 'T',
+    author: [{ given: 'Ada', family: 'Lovelace' }], issued: { 'date-parts': [[2020, 6, 15]] } });
+  assert.deepStrictEqual(out.issued['date-parts'][0], [2021], 'a changed year drops the stale month/day');
+});
 
 // --- numbered styles (IEEE, Vancouver) render "[1]" and the reference text
 // as two adjacent divs with no whitespace between them in the HTML.
