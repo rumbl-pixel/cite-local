@@ -466,5 +466,17 @@ check('project folder field only commits (and calls ensureFolder) on change, not
   assert.match(fnBody.slice(commitStart), /ensureFolder/);
 });
 
+// --- PDF drop zone must validate file type on drop, same as the file picker
+// (the click-to-choose input already restricts to .pdf via `accept`; drag-drop
+// silently accepted any file type and rendered it as if it were a valid PDF). ---
+check('PDF drop zone rejects non-PDF files instead of silently accepting them', () => {
+  const dropStart = appSource.indexOf("pdfDropZone').ondrop");
+  assert.notStrictEqual(dropStart, -1, 'ondrop handler not found');
+  const dropEnd = appSource.indexOf('};', dropStart);
+  const dropBody = appSource.slice(dropStart, dropEnd);
+  assert.doesNotMatch(dropBody, /\|\|\s*e\.dataTransfer\.files\[0\]/, 'must not fall back to any dropped file when none match .pdf');
+  assert.match(dropBody, /toast\(/, 'must show feedback when the dropped file is rejected');
+});
+
 console.log(`\n${failed ? failed + ' FAILED' : 'all checks passed'}`);
 process.exit(failed ? 1 : 0);

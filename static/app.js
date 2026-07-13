@@ -1090,7 +1090,9 @@ $('#pdfDropZone').ondragleave = () => $('#pdfDropZone').classList.remove('draggi
 $('#pdfDropZone').ondrop = e => {
   e.preventDefault();
   $('#pdfDropZone').classList.remove('dragging');
-  setPdfFile([...e.dataTransfer.files].find(file => /\.pdf$/i.test(file.name)) || e.dataTransfer.files[0]);
+  const pdf = [...e.dataTransfer.files].find(file => /\.pdf$/i.test(file.name));
+  if (!pdf) return toast('Only PDF files can be dropped here');
+  setPdfFile(pdf);
 };
 $('#pdfToolDrawer').onclick = e => {
   const button = e.target.closest('.pdf-tool');
