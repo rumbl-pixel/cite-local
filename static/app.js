@@ -1264,8 +1264,19 @@ function hasEntries() {
 function entryHtml() {
   return formatData.bibliography.join('');
 }
+function entryText(entry) {
+  // Numbered styles (IEEE, Vancouver) render the entry as two adjacent divs
+  // — .csl-left-margin ("[1]") and .csl-right-inline (the reference text) —
+  // with no whitespace between them in the HTML. .textContent concatenates
+  // element boundaries with no inserted space, so a naive extraction glues
+  // them into "[1]J. Doe, ..." (verified live). Join them with a space.
+  const left = entry.querySelector('.csl-left-margin');
+  const right = entry.querySelector('.csl-right-inline');
+  if (left && right) return `${left.textContent.trim()} ${right.textContent.trim()}`;
+  return entry.textContent.trim();
+}
 function entryPlainText() {
-  return entryNodes().map(e => e.textContent.trim()).join('\n\n');
+  return entryNodes().map(entryText).join('\n\n');
 }
 function safeFileName(name) {
   return (name || 'bibliography').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'bibliography';

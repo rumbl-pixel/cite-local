@@ -552,5 +552,26 @@ check('switching the active bibliography clears any pending manual-edit pointer'
   assert.match(fnBody.slice(onclickIdx), /addManual'\)\.dataset\.edit = ''/, 'switching projects must clear the stale edit pointer');
 });
 
+// --- numbered styles (IEEE, Vancouver) render "[1]" and the reference text
+// as two adjacent divs with no whitespace between them in the HTML.
+// .textContent naively concatenates element boundaries with no inserted
+// space, gluing plain-text/RTF exports into "[1]J. Doe, ..." (verified live
+// against real citeproc-js output). entryText() must insert the space. ---
+check('plain-text extraction inserts a space between a numbered entry\'s bracket and its text', () => {
+  const ieeeHtml = new Cite([book]).format('bibliography', { format: 'html', template: 'ieee', lang: 'en-US' });
+  const $ = cheerio.load(ieeeHtml);
+  const entry = $('.csl-entry').first();
+  assert.ok(entry.find('.csl-left-margin').length && entry.find('.csl-right-inline').length, 'fixture must have the two-div numbered-style structure this bug depends on');
+  // Reimplements entryText()'s algorithm against cheerio (no DOM in Node) —
+  // asserts the same join behavior the real browser code must perform.
+  const left = entry.find('.csl-left-margin').text().trim();
+  const right = entry.find('.csl-right-inline').text().trim();
+  const joined = `${left} ${right}`;
+  assert.doesNotMatch(joined, /\]\S/, 'bracket number must not be glued directly to the following text');
+  assert.match(joined, /^\[1\] /, 'expected "[1] " with a space, not "[1]" glued to the reference');
+  assert.match(appSource, /const left = entry\.querySelector\('\.csl-left-margin'\);/, 'entryText() must query the left-margin element');
+  assert.match(appSource, /return `\$\{left\.textContent\.trim\(\)\} \$\{right\.textContent\.trim\(\)\}`;/, 'entryText() must join with an explicit space');
+});
+
 console.log(`\n${failed ? failed + ' FAILED' : 'all checks passed'}`);
 process.exit(failed ? 1 : 0);
