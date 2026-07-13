@@ -429,6 +429,12 @@ function renderProjectButton(list, p, i) {
     db.active = i;
     activeFolder = p.folder || 'General';
     db.selected = proj().sources[0]?.id || null;
+    // A pending manual-edit pointer belongs to the project it was opened in —
+    // clear it so the form doesn't silently target a source in the project
+    // just left (the addManual handler also guards this, but resetting here
+    // keeps the "Save changes" button label from lying about what it'll do).
+    $('#addManual').dataset.edit = '';
+    $('#addManual').textContent = 'Add to library';
     saveLibrary();
     renderAll();
   };
@@ -1218,11 +1224,20 @@ $('#addManual').onclick = () => {
   const data = collectForm();
   if (!data.title) return toast('A title is required');
   const editId = $('#addManual').dataset.edit;
-  if (editId) {
-    const i = proj().sources.findIndex(s => s.id === editId);
+  // editId can point at a source in a DIFFERENT project if the user started
+  // editing, switched bibliographies without saving, then submitted here —
+  // findIndex would return -1 and `sources[-1] = data` would silently write
+  // a non-array property, discarding whatever the user just typed with no
+  // error. Fall back to a normal add instead of trusting a stale pointer.
+  const i = editId ? proj().sources.findIndex(s => s.id === editId) : -1;
+  if (editId && i >= 0) {
     data.id = editId; proj().sources[i] = data; db.selected = editId;
     $('#addManual').dataset.edit = ''; $('#addManual').textContent = 'Add to library';
-  } else addSource(data, true);
+  } else {
+    $('#addManual').dataset.edit = '';
+    $('#addManual').textContent = 'Add to library';
+    addSource(data, true);
+  }
   saveLibrary(); $('#manual').open = false; renderAll();
 };
 function openEdit(src) {

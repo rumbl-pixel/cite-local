@@ -528,5 +528,29 @@ check('renderBiblio discards stale out-of-order /api/format responses', () => {
   assert.match(afterApiCall, /requestId !== formatRequestSeq/, 'must check the sequence number is still current before applying the response');
 });
 
+// --- a pending manual-edit pointer must never silently corrupt data when it
+// no longer matches a source in the current project (e.g. user started
+// editing, switched bibliographies without saving, then submitted). Before
+// the fix, `sources[-1] = data` on a not-found index wrote a non-array
+// property, silently discarding whatever the user just typed. ---
+check('manual-entry save falls back to a normal add when the edit pointer is stale', () => {
+  const fnStart = appSource.indexOf("$('#addManual').onclick");
+  assert.notStrictEqual(fnStart, -1, "#addManual onclick handler not found");
+  const fnEnd = appSource.indexOf('\n};', fnStart);
+  const fnBody = appSource.slice(fnStart, fnEnd);
+  assert.doesNotMatch(fnBody, /if \(editId\) \{[\s\S]*?sources\[i\] = data/, 'must not trust editId truthiness alone');
+  assert.match(fnBody, /editId && i >= 0/, 'must verify the edit target actually exists in the current project before overwriting by index');
+  assert.match(fnBody, /addSource\(data, true\)/, 'a stale/missing edit target must fall back to a normal add, not a silent no-op');
+});
+check('switching the active bibliography clears any pending manual-edit pointer', () => {
+  const fnStart = appSource.indexOf('function renderProjectButton(');
+  assert.notStrictEqual(fnStart, -1, 'renderProjectButton not found');
+  const fnEnd = appSource.indexOf('\n}', fnStart);
+  const fnBody = appSource.slice(fnStart, fnEnd);
+  const onclickIdx = fnBody.indexOf('b.onclick');
+  assert.notStrictEqual(onclickIdx, -1, 'project switch onclick not found');
+  assert.match(fnBody.slice(onclickIdx), /addManual'\)\.dataset\.edit = ''/, 'switching projects must clear the stale edit pointer');
+});
+
 console.log(`\n${failed ? failed + ' FAILED' : 'all checks passed'}`);
 process.exit(failed ? 1 : 0);
