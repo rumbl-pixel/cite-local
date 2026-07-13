@@ -1,9 +1,10 @@
 // CiteLocal server: static UI + API. No accounts, no limits, no keys.
 import express from 'express';
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, win32, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { homedir } from 'node:os';
 import * as cheerio from 'cheerio';
 import { Cite, plugins } from '@citation-js/core';
 import '@citation-js/plugin-csl';
@@ -12,7 +13,29 @@ import '@citation-js/plugin-bibtex';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT || 4747;
-const DATA_DIR = process.env.CITELOCAL_DATA_DIR || join(__dirname, 'data');
+
+// One canonical library location per machine, regardless of how CiteLocal is
+// launched (browser dev server, `electron .`, the portable exe, or an
+// installed app). This mirrors Electron's own app.getPath('userData')
+// convention exactly (same OS paths, same app-name folder: "cite-local", the
+// package.json name) so the browser and every Electron entry point always
+// converge on the identical file — no more silently forked, diverging
+// libraries depending on which way the app happened to be opened.
+// ponytail: hand-rolled instead of an env-paths dependency — only 3 branches, ever.
+// Uses path.win32/path.posix explicitly (not the host-bound `join`) so this is a true
+// pure function of its platform argument — testable for all three OSes from any host.
+function computeDefaultDataDir(platform, env, home) {
+  const appName = 'cite-local';
+  const p = platform === 'win32' ? win32 : posix;
+  if (platform === 'win32') return p.join(env.APPDATA || p.join(home, 'AppData', 'Roaming'), appName, 'data');
+  if (platform === 'darwin') return p.join(home, 'Library', 'Application Support', appName, 'data');
+  return p.join(env.XDG_CONFIG_HOME || p.join(home, '.config'), appName, 'data');
+}
+function defaultDataDir() {
+  return computeDefaultDataDir(process.platform, process.env, homedir());
+}
+
+const DATA_DIR = process.env.CITELOCAL_DATA_DIR || defaultDataDir();
 const LIBRARY_FILE = join(DATA_DIR, 'citelocal-library.json');
 
 const index = JSON.parse(await readFile(join(__dirname, 'styles-index.json'), 'utf8'));
@@ -438,4 +461,4 @@ if (process.env.NODE_ENV !== 'test' && process.env.CITELOCAL_NO_AUTO_START !== '
   console.log(`CiteLocal running: http://localhost:${port}`);
 }
 
-export { app, defaultLibrary, extractCSL, nameToCSL, normalizeLibrary, parseDate, readLibrary, writeLibrary, crossrefToCSL, clean_, startServer, DATA_DIR, LIBRARY_FILE };
+export { app, defaultLibrary, extractCSL, nameToCSL, normalizeLibrary, parseDate, readLibrary, writeLibrary, crossrefToCSL, clean_, startServer, DATA_DIR, LIBRARY_FILE, computeDefaultDataDir };

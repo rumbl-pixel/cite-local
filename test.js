@@ -1,6 +1,7 @@
 // One runnable self-check. `node test.js` — exits nonzero if the core logic breaks.
 import assert from 'node:assert';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import vm from 'node:vm';
 import * as cheerio from 'cheerio';
 import { Cite, plugins } from '@citation-js/core';
@@ -8,7 +9,7 @@ import '@citation-js/plugin-csl';
 
 process.env.NODE_ENV = 'test';
 
-const { defaultLibrary, extractCSL, nameToCSL, normalizeLibrary, parseDate } = await import('./server.js');
+const { computeDefaultDataDir, defaultLibrary, extractCSL, nameToCSL, normalizeLibrary, parseDate } = await import('./server.js');
 
 let failed = 0;
 const check = (name, fn) => { try { fn(); console.log('  ok  ' + name); } catch (e) { failed++; console.log('FAIL  ' + name + ' — ' + e.message); } };
@@ -403,6 +404,66 @@ await formatWith('ieee', book); // ensure ieee registered
 check('IEEE numbers in-text distinctly ([1] / [2]), not [1] / [1]', () => {
   const out = engineInText('ieee', sameYear);
   assert.deepStrictEqual(out, ['[1]', '[2]']);
+});
+
+// --- data-dir unification: browser, `electron .`, and packaged builds must
+// all converge on the same per-OS library location (July 2026 incident:
+// Electron overrode CITELOCAL_DATA_DIR to its own userData path while the
+// browser dev server defaulted to a repo-relative folder, so the two silently
+// forked into separate, diverging libraries). Guard both halves of the fix. ---
+check('default data dir matches Electron\'s userData convention on Windows', () => {
+  const dir = computeDefaultDataDir('win32', { APPDATA: 'C:\\Users\\jane\\AppData\\Roaming' }, 'C:\\Users\\jane');
+  assert.strictEqual(dir, 'C:\\Users\\jane\\AppData\\Roaming\\cite-local\\data');
+});
+check('default data dir matches Electron\'s userData convention on macOS', () => {
+  const dir = computeDefaultDataDir('darwin', {}, '/Users/jane');
+  assert.strictEqual(dir, '/Users/jane/Library/Application Support/cite-local/data');
+});
+check('default data dir matches Electron\'s userData convention on Linux', () => {
+  const dir = computeDefaultDataDir('linux', {}, '/home/jane');
+  assert.strictEqual(dir, '/home/jane/.config/cite-local/data');
+});
+check('default data dir is never repo-relative (would fork per launch method)', () => {
+  const dir = computeDefaultDataDir('win32', { APPDATA: 'C:\\Users\\jane\\AppData\\Roaming' }, 'C:\\Users\\jane');
+  assert.notStrictEqual(dir, join(process.cwd(), 'data'), 'must not resolve to a folder inside the repo checkout');
+  assert.ok(dir.includes('AppData'), 'Windows data dir must live under the per-user AppData profile, not the repo');
+});
+check('electron/main.js no longer unconditionally overrides CITELOCAL_DATA_DIR', () => {
+  // The override must be conditional on CITELOCAL_SMOKE_TEST — never a bare
+  // assignment that would re-fork the library away from server.js's default.
+  assert.doesNotMatch(electronMainSource, /^\s*process\.env\.CITELOCAL_DATA_DIR = join\(app\.getPath/m);
+  assert.match(electronMainSource, /CITELOCAL_SMOKE_TEST[\s\S]*?CITELOCAL_DATA_DIR\s*=\s*smokeDataDir/);
+});
+check('smoke test cleans up its isolated data directory on exit', () => {
+  assert.match(electronMainSource, /rm\(smokeDataDir,\s*\{\s*recursive:\s*true,\s*force:\s*true\s*\}\)/);
+});
+
+// --- project-folder field must not create a folder on every keystroke ---
+// (July 2026 incident: typing "Families, Communities and Citizenship" created
+// 39 junk folders — one per intermediate character — because the folder
+// field was wired to 'input' through a shared handler that unconditionally
+// called ensureFolder(), which creates a new folder for any unseen name.)
+check('project name/unit fields commit live but do not call ensureFolder', () => {
+  const fnStart = appSource.indexOf('function bindProjectMeta(');
+  assert.notStrictEqual(fnStart, -1, 'bindProjectMeta not found');
+  const fnEnd = appSource.indexOf('\n}', fnStart);
+  const fnBody = appSource.slice(fnStart, fnEnd);
+  const updateTextStart = fnBody.indexOf('const updateText');
+  const updateTextEnd = fnBody.indexOf('};', updateTextStart);
+  const updateTextBody = fnBody.slice(updateTextStart, updateTextEnd);
+  assert.doesNotMatch(updateTextBody, /ensureFolder/, 'the per-keystroke text handler must never call ensureFolder');
+  assert.match(fnBody, /projectNameInput'\)\.addEventListener\('input', updateText\)/);
+  assert.match(fnBody, /unitCodeInput'\)\.addEventListener\('input', updateText\)/);
+});
+check('project folder field only commits (and calls ensureFolder) on change, not input', () => {
+  const fnStart = appSource.indexOf('function bindProjectMeta(');
+  const fnEnd = appSource.indexOf('\n}', fnStart);
+  const fnBody = appSource.slice(fnStart, fnEnd);
+  assert.match(fnBody, /projectFolderInput'\)\.addEventListener\('change', commitFolder\)/);
+  assert.doesNotMatch(fnBody, /projectFolderInput'\)\.addEventListener\('input'/);
+  const commitStart = fnBody.indexOf('const commitFolder');
+  assert.notStrictEqual(commitStart, -1, 'commitFolder not found');
+  assert.match(fnBody.slice(commitStart), /ensureFolder/);
 });
 
 console.log(`\n${failed ? failed + ' FAILED' : 'all checks passed'}`);

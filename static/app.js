@@ -546,18 +546,29 @@ function renderProjectEditor() {
   $('#projectMetaLine').textContent = `${projectSubline(proj())} saved locally`;
 }
 function bindProjectMeta() {
-  const update = () => {
+  // Name/unit are free text with no side effects — safe to save on every
+  // keystroke. Folder assignment is NOT: ensureFolder() creates a new folder
+  // for any name it hasn't seen before, so wiring it to 'input' created one
+  // junk folder per keystroke while typing (e.g. "F", "Fa", "Fam", ... for a
+  // real July 2026 incident). Folder only commits on blur/Enter ('change').
+  const updateText = () => {
     proj().name = $('#projectNameInput').value.trim() || 'Untitled assignment';
     proj().unit = $('#unitCodeInput').value.trim();
+    saveLibrary();
+    renderProjectList();
+    renderLibrarySections();
+    $('#projectMetaLine').textContent = `${projectSubline(proj())} saved locally`;
+  };
+  const commitFolder = () => {
     proj().folder = ensureFolder($('#projectFolderInput').value.trim() || 'General');
     saveLibrary();
     renderProjectList();
     renderLibrarySections();
     $('#projectMetaLine').textContent = `${projectSubline(proj())} saved locally`;
   };
-  $('#projectNameInput').addEventListener('input', update);
-  $('#unitCodeInput').addEventListener('input', update);
-  $('#projectFolderInput').addEventListener('input', update);
+  $('#projectNameInput').addEventListener('input', updateText);
+  $('#unitCodeInput').addEventListener('input', updateText);
+  $('#projectFolderInput').addEventListener('change', commitFolder);
 }
 
 // ---- style picker ----
