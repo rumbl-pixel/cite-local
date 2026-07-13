@@ -611,6 +611,48 @@ check('detail-panel save falls back to year-only when the year actually changes'
     author: [{ given: 'Ada', family: 'Lovelace' }], issued: { 'date-parts': [[2020, 6, 15]] } });
   assert.deepStrictEqual(out.issued['date-parts'][0], [2021], 'a changed year drops the stale month/day');
 });
+check('no window.prompt() — it throws "not supported" in the Electron build', () => {
+  // Verified via an Electron probe: window.prompt() throws in the packaged app,
+  // so any prompt-based flow silently dead-ends its button in the .exe (confirm()
+  // is fine). createProject must create-then-rename, never prompt.
+  const calls = appSource.match(/(^|[^.\w])prompt\s*\(/g) || [];
+  assert.strictEqual(calls.length, 0, `window.prompt() must not be called (found ${calls.length})`);
+  const start = appSource.indexOf('function createProject(');
+  const body = appSource.slice(start, appSource.indexOf('\nfunction ', start + 1));
+  assert.match(body, /db\.projects\.push\(/, 'createProject must create the bibliography directly');
+  assert.match(body, /#projectNameInput'\)\.focus\(\)/, 'createProject must focus the name field for rename');
+});
+check('manual-editor date round-trip preserves year-only precision', () => {
+  // <input type="date"> forces a full YYYY-MM-DD, so a year-only source is
+  // padded to Jan 1 for display. Re-saving unchanged must restore the true
+  // year-only precision, not fabricate "2020-01-01".
+  const start = appSource.indexOf('function partsToIso(parts) {');
+  const end = appSource.indexOf('\nfunction ', start + 1);
+  const partsToIso = new Function(appSource.slice(start, end) + '\nreturn partsToIso;')();
+  assert.strictEqual(partsToIso([2020]), '2020-01-01', 'year-only pads to Jan 1 for the date input');
+  assert.strictEqual(partsToIso([2020, 6, 15]), '2020-06-15', 'full date renders verbatim');
+  // Replicates collectForm's date branch to prove the preserve-if-unchanged rule.
+  const collectDate = (orig, nodeValue) =>
+    (orig.length && nodeValue === partsToIso(orig)) ? [orig] : [nodeValue.split('-').map(Number)];
+  assert.deepStrictEqual(collectDate([2020], '2020-01-01'), [[2020]], 'untouched year-only stays year-only');
+  assert.deepStrictEqual(collectDate([2020, 6, 15], '2021-03-05'), [[2021, 3, 5]], 'an edited date takes the new value');
+  // Wiring: the real collectForm must stash orig parts and compare via partsToIso.
+  assert.match(appSource, /origParts: JSON\.stringify\(parts\)/, 'dateInput must stash the original date-parts');
+  assert.match(appSource, /node\.value === partsToIso\(orig\)/, 'collectForm must preserve unchanged precision');
+});
+check('a pending debounced save is flushed on page unload with keepalive', () => {
+  // The file PUT is debounced 250ms; localStorage is immediate. On load the
+  // server file is source of truth, so a close within that window would lose
+  // the last change. A pagehide flush with keepalive must close the gap.
+  assert.match(appSource, /let pendingSave = false;/, 'debounced saves must track a pending flag');
+  assert.match(appSource, /else \{ pendingSave = true; saveT = setTimeout\(run, 250\); \}/, 'debounced path must mark the save pending');
+  const fnStart = appSource.indexOf('function flushPendingSave()');
+  assert.notStrictEqual(fnStart, -1, 'flushPendingSave() must exist');
+  const fnBody = appSource.slice(fnStart, appSource.indexOf('\n}', fnStart));
+  assert.match(fnBody, /if \(!pendingSave\) return;/, 'flush must no-op when nothing is pending');
+  assert.match(fnBody, /keepalive: true/, 'the unload flush must use keepalive so it survives teardown');
+  assert.match(appSource, /addEventListener\('pagehide', flushPendingSave\)/, 'flush must be wired to page unload');
+});
 
 // --- numbered styles (IEEE, Vancouver) render "[1]" and the reference text
 // as two adjacent divs with no whitespace between them in the HTML.

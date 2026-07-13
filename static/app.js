@@ -171,10 +171,12 @@ function normalizeNotes(notes) {
 function isEmptyLibrary(lib) {
   return lib.projects.length === 1 && !lib.projects[0].sources.length && !lib.projects[0].notes.length;
 }
+let pendingSave = false;
 async function saveLibrary(now = false) {
   localStorage.setItem(KEY, JSON.stringify(db));
   clearTimeout(saveT);
   const run = async () => {
+    pendingSave = false;
     try {
       await api('/api/library', {
         method: 'PUT',
@@ -186,8 +188,31 @@ async function saveLibrary(now = false) {
     }
   };
   if (now) await run();
-  else saveT = setTimeout(run, 250);
+  else { pendingSave = true; saveT = setTimeout(run, 250); }
 }
+// The file PUT is debounced 250ms while localStorage is written immediately.
+// On load the server file is the source of truth (it's the ONE store shared by
+// the browser and the Electron build — their localStorages are separate), so a
+// close within that 250ms window would let the stale file overwrite the newer
+// localStorage change on next launch. Flush any pending save on unload with
+// keepalive so it survives the page teardown.
+// ponytail: keepalive body is capped ~64KB per browser; a huge library could
+// exceed it, but the debounced normal save covers the common case — this is
+// only the rare close-mid-debounce safety net.
+function flushPendingSave() {
+  if (!pendingSave) return;
+  pendingSave = false;
+  clearTimeout(saveT);
+  try {
+    fetch('/api/library', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(db),
+      keepalive: true,
+    }).catch(() => {});
+  } catch { /* unload teardown — nothing more we can do */ }
+}
+window.addEventListener('pagehide', flushPendingSave);
 
 // ---- toast ----
 let toastT;
@@ -457,13 +482,19 @@ async function openDataFolder() {
   }
 }
 function createProject(folderName = activeFolder || proj().folder || 'General') {
-  const name = prompt('Assignment or bibliography name:', 'Untitled assignment'); if (!name) return;
+  // Create-then-rename, NOT a modal prompt: Electron throws "prompt is not
+  // supported", so a prompt-based flow silently dead-ends the New button in the
+  // packaged .exe. Make the bibliography immediately with a default name and
+  // drop the cursor in the always-present, auto-saving name field to rename.
   const folder = ensureFolder(folderName);
-  db.projects.push({ id: 'project-' + Math.random().toString(36).slice(2, 9), name, unit: '', folder, trashedAt: '', style: proj().style, notes: [], sources: [] });
+  db.projects.push({ id: 'project-' + Math.random().toString(36).slice(2, 9), name: 'Untitled assignment', unit: '', folder, trashedAt: '', style: proj().style, notes: [], sources: [] });
   db.active = db.projects.length - 1;
   db.selected = null;
   activeRailSection = 'folders';
+  activeTool = '';
   saveLibrary(); renderAll();
+  $('#projectNameInput').focus();
+  $('#projectNameInput').select();
 }
 function createFolder() {
   const name = $('#folderNameInput').value;
@@ -1195,10 +1226,17 @@ function labelFor(f) {
   return ({ 'container-title': 'Publication / site', 'publisher-place': 'Place', DOI: 'DOI', URL: 'URL', ISBN: 'ISBN', issued: 'Date published', accessed: 'Date accessed', page: 'Pages' })[f] || f;
 }
 function scalar(v) { return v == null ? '' : String(v); }
+function dateParts(v) { return v?.['date-parts']?.[0] || []; }
+function partsToIso(parts) {
+  return parts.length ? `${parts[0]}-${String(parts[1] || 1).padStart(2, '0')}-${String(parts[2] || 1).padStart(2, '0')}` : '';
+}
 function dateInput(f, v) {
-  const parts = v?.['date-parts']?.[0] || [];
-  const iso = parts.length ? `${parts[0]}-${String(parts[1] || 1).padStart(2, '0')}-${String(parts[2] || 1).padStart(2, '0')}` : '';
-  return el('input', { type: 'date', dataset: { field: f, kind: 'date' }, value: iso });
+  const parts = dateParts(v);
+  // <input type="date"> can only hold a complete YYYY-MM-DD, so a year-only
+  // date must be padded to Jan 1 for display. Stash the original parts so
+  // collectForm can restore the true precision if the field is left unchanged
+  // — otherwise re-saving a "2020" source silently fabricates "2020-01-01".
+  return el('input', { type: 'date', dataset: { field: f, kind: 'date', origParts: JSON.stringify(parts) }, value: partsToIso(parts) });
 }
 function authorEditor(f, arr) {
   const box = el('div', { className: 'authors', dataset: { field: f, kind: 'names' } });
@@ -1230,7 +1268,13 @@ function collectForm() {
       }).filter(Boolean);
       if (names.length) out[f] = names;
     } else if (node.dataset.kind === 'date') {
-      if (node.value) { const [y, m, d] = node.value.split('-').map(Number); out[f] = { 'date-parts': [[y, m, d]] }; }
+      if (node.value) {
+        const orig = JSON.parse(node.dataset.origParts || '[]');
+        // Field untouched → keep the source's real precision (e.g. year-only),
+        // not the date picker's Jan-1-padded value. Edited → take the new date.
+        if (orig.length && node.value === partsToIso(orig)) out[f] = { 'date-parts': [orig] };
+        else { const [y, m, d] = node.value.split('-').map(Number); out[f] = { 'date-parts': [[y, m, d]] }; }
+      }
     } else if (node.value.trim()) out[f] = node.value.trim();
   });
   return out;
