@@ -1,8 +1,8 @@
 {
   "name": "cite-local",
   "version": "1.0.0",
-  "description": "Local, offline citation and bibliography manager",
-  "author": "CiteLocal",
+  "description": "Local, offline study toolbox for citations, notes, and assignment utilities",
+  "author": "Study Toolbelt",
   "license": "MIT",
   "type": "module",
   "main": "electron/main.js",
@@ -21,7 +21,7 @@
   },
   "build": {
     "appId": "com.citelocal.app",
-    "productName": "CiteLocal",
+    "productName": "Study Toolbelt",
     "asar": true,
     "files": [
       "electron/**/*",

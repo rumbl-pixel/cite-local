@@ -138,7 +138,7 @@ check('desktop app shell is configured for Mac and Windows local runs', () => {
   assert.ok(packageJson.scripts.verify);
   assert.ok(packageJson.scripts['dist:win']);
   assert.ok(packageJson.scripts['dist:mac']);
-  assert.strictEqual(packageJson.build.productName, 'CiteLocal');
+  assert.strictEqual(packageJson.build.productName, 'Study Toolbelt');
   assert.ok(packageJson.build.win.target.includes('nsis'));
   assert.ok(packageJson.build.mac.target.includes('dmg'));
   assert.strictEqual(packageJson.build.mac.icon, 'build/icon.svg');
@@ -156,6 +156,7 @@ check('desktop app shell is configured for Mac and Windows local runs', () => {
   assert.match(macDesktopLauncher, /npm run desktop/);
   assert.match(licenseSource, /MIT License/);
   assert.match(electronMainSource, /BrowserWindow/);
+  assert.match(electronMainSource, /title: 'Study Toolbelt'/);
 });
 check('generated desktop artifacts are ignored from source control', () => {
   assert.match(gitignoreSource, /node_modules\//);
@@ -187,6 +188,9 @@ check('app shell exposes local library, citation workspace, and notepad regions'
     assert.match(htmlSource, new RegExp(`id="${id}"`));
   });
   assert.match(htmlSource, /<body data-rs-theme="slate" data-rs-color-mode="dark"/);
+  assert.match(htmlSource, /<title>Study Toolbelt<\/title>/);
+  assert.match(htmlSource, /<h1>Study Toolbelt<\/h1>/);
+  assert.match(htmlSource, /Local study workspace/);
   assert.match(htmlSource, /theme\.css\?v=\d+/);
   assert.match(htmlSource, /vendor\/reshaped-slate\.theme\.css\?v=\d+/);
   assert.doesNotMatch(htmlSource, /theme-workshop/);
@@ -248,6 +252,7 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(cssSource, /\.pdf-drawer-tab/);
   assert.match(cssSource, /\.folder-block/);
   assert.match(cssSource, /\.folder-add/);
+  assert.match(cssSource, /\.folder-remove/);
   assert.match(cssSource, /\.folder-creator/);
   assert.match(htmlSource, /data-tool="word-count"/);
   assert.match(htmlSource, /data-tool="pdf-tools"/);
@@ -290,7 +295,7 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.doesNotMatch(appSource, /openPdfActions/);
   assert.match(appSource, /\$\('#closePdfTools'\)\.onclick = \(\) => setActiveTool\(''\);/);
   assert.match(htmlSource, /<script type="module" src="app\.js\?v=drawer\d+"><\/script>/);
-  ['saveLibrary', 'renderSourceList', 'renderNotes', 'setRailCollapsed', 'setNotesDrawerOpen', 'compactRailSections', 'notesBackdrop', 'renderLibrarySections', 'setRailSection', 'setActiveTool', 'setPdfDrawerExpanded', 'renderToolWorkspace', 'setPdfFile', 'selectPdfTool', 'visibleProjectIndexes', 'libraryFolders', 'ensureFolder', 'renderFolderBlock', 'createFolder', 'createProject', 'loadStorageInfo', 'loadAppHealth', 'renderAppHealth', 'openDataFolder', 'textWithoutParentheses', 'countWords', 'renderWordCount', 'restoreToolDrafts'].forEach(name => assert.match(appSource, new RegExp(name)));
+  ['saveLibrary', 'renderSourceList', 'renderNotes', 'setRailCollapsed', 'setNotesDrawerOpen', 'compactRailSections', 'notesBackdrop', 'renderLibrarySections', 'setRailSection', 'setActiveTool', 'setPdfDrawerExpanded', 'renderToolWorkspace', 'setPdfFile', 'selectPdfTool', 'visibleProjectIndexes', 'libraryFolders', 'ensureFolder', 'renderFolderBlock', 'createFolder', 'deleteEmptyFolder', 'trashFolderProjects', 'removeFolderRecord', 'createProject', 'loadStorageInfo', 'loadAppHealth', 'renderAppHealth', 'openDataFolder', 'textWithoutParentheses', 'countWords', 'renderWordCount', 'restoreToolDrafts'].forEach(name => assert.match(appSource, new RegExp(name)));
 });
 check('notes can be added as rows and linked to saved sources', () => {
   assert.match(htmlSource, /id="selectedSourceNotes"/);
@@ -382,6 +387,13 @@ check('normalizing an imported library preserves projects, notes, and sources', 
   assert.strictEqual(lib.projects[0].trashedAt, '2026-07-08T00:00:00.000Z');
   assert.strictEqual(lib.projects[0].notes[0].text, 'legacy note');
   assert.strictEqual(lib.projects[0].sources[0].id, 's1');
+});
+check('normalizing an imported library collapses duplicate folder names case-insensitively', () => {
+  const lib = normalizeLibrary({
+    folders: [{ name: 'NURS1004' }, { name: 'nurs1004' }, { name: '  NURS1004  ' }],
+    projects: [{ name: 'Assignment A', folder: 'NURS1004', notes: [], sources: [] }],
+  });
+  assert.deepStrictEqual(lib.folders.map(f => f.name), ['NURS1004', 'General']);
 });
 check('normalizeLibrary round-trips folders, trash, notes, and sources', () => {
   const original = {

@@ -36,7 +36,7 @@ async function createWindow() {
     height: 920,
     minWidth: 1100,
     minHeight: 720,
-    title: 'CiteLocal',
+    title: 'Study Toolbelt',
     backgroundColor: '#111820',
     autoHideMenuBar: true,
     webPreferences: {

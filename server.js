@@ -1,4 +1,4 @@
-// CiteLocal server: static UI + API. No accounts, no limits, no keys.
+// Study Toolbelt server: static UI + API. No accounts, no limits, no keys.
 import express from 'express';
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, dirname, win32, posix } from 'node:path';
@@ -72,7 +72,14 @@ function normalizeLibrary(data) {
     ...projects.map(p => p.folder || 'General'),
     'General',
   ].map(name => String(name || '').trim()).filter(Boolean);
-  const folders = [...new Set(folderNames)].map((name, i) => ({
+  const seenFolders = new Set();
+  const uniqueFolderNames = folderNames.filter(name => {
+    const key = name.toLowerCase();
+    if (seenFolders.has(key)) return false;
+    seenFolders.add(key);
+    return true;
+  });
+  const folders = uniqueFolderNames.map((name, i) => ({
     id: String((Array.isArray(data.folders) && typeof data.folders[i] === 'object' && data.folders[i]?.id) || `folder-${slug(name)}-${i}`),
     name,
   }));
@@ -250,7 +257,7 @@ async function enrichMissingDoiAuthors(items, doi) {
   try {
     const r = await fetch(`https://doi.org/${encodeURI(doi)}`, {
       redirect: 'follow',
-      headers: { 'User-Agent': 'Mozilla/5.0 (CiteLocal metadata fetch)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (Study Toolbelt metadata fetch)' },
     });
     const contentType = r.headers.get('content-type') || '';
     if (!r.ok || !contentType.includes('html')) return list;
@@ -334,7 +341,7 @@ app.get('/api/search', async (req, res) => {
   if (!q) return res.json([]);
   try {
     const url = `https://api.crossref.org/works?rows=10&mailto=citelocal@localhost&query.bibliographic=${encodeURIComponent(q)}`;
-    const r = await fetch(url, { headers: { 'User-Agent': 'CiteLocal/1.0 (mailto:citelocal@localhost)' } });
+    const r = await fetch(url, { headers: { 'User-Agent': 'StudyToolbelt/1.0 (mailto:citelocal@localhost)' } });
     const j = await r.json();
     const items = (j.message?.items || []).map(crossrefToCSL);
     res.json(items);
@@ -362,7 +369,7 @@ app.get('/api/scrape', async (req, res) => {
   try {
     const r = await fetch(url, {
       redirect: 'follow',
-      headers: { 'User-Agent': 'Mozilla/5.0 (CiteLocal metadata fetch)' },
+      headers: { 'User-Agent': 'Mozilla/5.0 (Study Toolbelt metadata fetch)' },
     });
     // A direct PDF/binary link decoded as text and parsed as HTML finds no
     // real metadata anywhere, so extractCSL falls all the way through to
@@ -496,7 +503,7 @@ if (process.env.NODE_ENV !== 'test' && process.env.CITELOCAL_NO_AUTO_START !== '
   const server = await startServer(PORT);
   const address = server.address();
   const port = typeof address === 'object' && address ? address.port : PORT;
-  console.log(`CiteLocal running: http://localhost:${port}`);
+  console.log(`Study Toolbelt running: http://localhost:${port}`);
 }
 
 export { app, defaultLibrary, extractCSL, nameToCSL, normalizeDoi, normalizeLibrary, parseDate, readLibrary, writeLibrary, crossrefToCSL, clean_, startServer, DATA_DIR, LIBRARY_FILE, computeDefaultDataDir };

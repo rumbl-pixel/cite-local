@@ -227,7 +227,7 @@ function renderAppHealth() {
     box.textContent = '';
     return;
   }
-  box.textContent = appHealth.setupHint || 'CiteLocal setup needs attention.';
+  box.textContent = appHealth.setupHint || 'Study Toolbelt setup needs attention.';
   box.classList.remove('hidden');
 }
 
@@ -238,12 +238,23 @@ function libraryFolders() {
     ...db.projects.filter(p => !p.trashedAt).map(p => p.folder || 'General'),
     'General',
   ].map(name => String(name || '').trim()).filter(Boolean);
-  return [...new Set(names)];
+  const seen = new Set();
+  return names.filter(name => {
+    const key = name.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 function ensureFolder(name) {
   const clean = String(name || '').trim() || 'General';
   if (!Array.isArray(db.folders)) db.folders = [];
-  if (!libraryFolders().includes(clean)) {
+  const existing = libraryFolders().find(folder => folder.toLowerCase() === clean.toLowerCase());
+  if (existing) {
+    activeFolder = existing;
+    return existing;
+  }
+  {
     db.folders.push({ id: `folder-${slug(clean)}-${Date.now()}`, name: clean });
   }
   activeFolder = clean;
@@ -437,8 +448,16 @@ function renderFolderBlock(list, folder) {
   };
   const add = el('button', { className: 'folder-add', type: 'button', textContent: '+' });
   add.title = `New bibliography in ${folder}`;
+  add.setAttribute('aria-label', `New bibliography in ${folder}`);
   add.onclick = () => createProject(folder);
   head.append(name, add);
+  if (folder !== 'General') {
+    const remove = el('button', { className: 'folder-remove', type: 'button', textContent: items.length ? 'Trash' : 'Delete' });
+    remove.title = items.length ? `Move ${folder} bibliographies to Trash` : `Delete empty folder ${folder}`;
+    remove.setAttribute('aria-label', remove.title);
+    remove.onclick = () => items.length ? trashFolderProjects(folder) : deleteEmptyFolder(folder);
+    head.appendChild(remove);
+  }
   box.appendChild(head);
   if (!items.length) {
     box.appendChild(el('p', { className: 'empty tight', textContent: 'Empty unit folder' }));
@@ -506,6 +525,36 @@ function createFolder() {
   saveLibrary();
   renderAll();
   toast(`Folder ready: ${folder}`);
+}
+function removeFolderRecord(folder) {
+  if (!Array.isArray(db.folders)) return;
+  db.folders = db.folders.filter(f => String(typeof f === 'string' ? f : f?.name || '').trim().toLowerCase() !== folder.toLowerCase());
+}
+function deleteEmptyFolder(folder) {
+  if (folder === 'General') return toast('General is the default folder');
+  if (projectsInFolder(folder, true).length) return toast('Move or trash the bibliographies in this folder first');
+  if (!confirm(`Delete empty folder "${folder}"?`)) return;
+  removeFolderRecord(folder);
+  if (activeFolder.toLowerCase() === folder.toLowerCase()) activeFolder = 'General';
+  saveLibrary();
+  renderAll();
+  toast('Folder deleted');
+}
+function trashFolderProjects(folder) {
+  if (folder === 'General') return toast('General is the default folder');
+  const items = projectsInFolder(folder);
+  if (!items.length) return deleteEmptyFolder(folder);
+  const liveCount = db.projects.filter(p => !p.trashedAt).length;
+  if (items.length >= liveCount) return toast('Keep at least one active bibliography');
+  if (!confirm(`Move ${items.length} bibliograph${items.length === 1 ? 'y' : 'ies'} in "${folder}" to Trash and remove the folder?`)) return;
+  const now = new Date().toISOString();
+  items.forEach(({ p }) => { p.trashedAt = now; });
+  removeFolderRecord(folder);
+  activeFolder = 'General';
+  ensureActiveProjectVisible();
+  saveLibrary();
+  renderAll();
+  toast('Folder moved to Trash');
 }
 $('#newProj').onclick = () => {
   createProject(activeRailSection === 'folders' ? activeFolder : (proj().folder || activeFolder || 'General'));
@@ -1393,13 +1442,13 @@ $('#dlBibtex').onclick = async () => {
 };
 function exportLibraryBackup() {
   const stamp = new Date().toISOString().slice(0, 10);
-  download(`citelocal-library-${stamp}.json`, JSON.stringify(normalizeLibrary(db), null, 2), 'application/json');
+  download(`study-toolbelt-library-${stamp}.json`, JSON.stringify(normalizeLibrary(db), null, 2), 'application/json');
 }
 async function importLibraryBackup(file) {
   const text = await file.text();
   const next = normalizeLibrary(JSON.parse(text));
   if (!next.projects.length) throw new Error('No bibliography projects found');
-  if (!confirm('Replace the current local CiteLocal library with this backup?')) return;
+  if (!confirm('Replace the current local Study Toolbelt library with this backup?')) return;
   db = next;
   if (!selectedSource()) db.selected = proj().sources[0]?.id || null;
   await saveLibrary(true);

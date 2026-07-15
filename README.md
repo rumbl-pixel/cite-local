@@ -1,6 +1,6 @@
-# CiteLocal
+# Study Toolbelt
 
-A local reference-library app for capturing sources and formatting citations.
+A local study workspace for capturing sources, formatting citations, notes, and assignment utilities.
 No accounts, no ads, no 7-day expiry, no subscription. Runs on your machine.
 
 ## What it does
@@ -47,7 +47,7 @@ Open http://localhost:4747 in any browser.
 npm run desktop
 ```
 
-The desktop shell opens CiteLocal in its own local app window. In desktop mode,
+The desktop shell opens Study Toolbelt in its own local app window. In desktop mode,
 the library is stored in your operating system's app-data folder instead of the
 project folder, so it is safe for normal local use on both Windows and macOS.
 
@@ -58,7 +58,7 @@ commands each time:
 - macOS: run `chmod +x launch-citelocal-desktop.command` once, then open it.
 
 Both launchers install dependencies if needed, run the local CSL bootstrap, and
-then open the CiteLocal desktop window.
+then open the Study Toolbelt desktop window.
 
 ## Package desktop builds
 
@@ -71,8 +71,8 @@ npm run pack           # unpacked app folder for quick local smoke tests
 Windows builds should be produced on Windows. macOS builds should be produced on
 a Mac, especially when signing/notarization is added later.
 
-After a Windows build, the portable app is written to `dist/CiteLocal 1.0.0.exe`
-and the unpacked app is available at `dist/win-unpacked/CiteLocal.exe`.
+After a Windows build, the portable app is written to `dist/Study Toolbelt 1.0.0.exe`
+and the unpacked app is available at `dist/win-unpacked/Study Toolbelt.exe`.
 
 ## Publish to GitHub
 
@@ -89,7 +89,7 @@ you authenticated with and pushes the `main` branch.
 
 ## License
 
-MIT. CiteLocal is set up as a free public project that people can use, fork,
+MIT. Study Toolbelt is set up as a free public project that people can use, fork,
 modify, and share.
 
 ## Test
