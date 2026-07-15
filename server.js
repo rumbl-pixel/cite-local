@@ -236,6 +236,35 @@ app.get('/api/styles', (req, res) => {
   res.json(hits);
 });
 
+function normalizeDoi(value) {
+  return String(value || '')
+    .trim()
+    .replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '')
+    .replace(/^doi:\s*/i, '')
+    .replace(/^[\s(<[]+|[\s)>.,;:!?]+$/g, '');
+}
+
+async function enrichMissingDoiAuthors(items, doi) {
+  const list = Array.isArray(items) ? items : [items];
+  if (!list.some(item => !Array.isArray(item.author) || !item.author.length)) return list;
+  try {
+    const r = await fetch(`https://doi.org/${encodeURI(doi)}`, {
+      redirect: 'follow',
+      headers: { 'User-Agent': 'Mozilla/5.0 (CiteLocal metadata fetch)' },
+    });
+    const contentType = r.headers.get('content-type') || '';
+    if (!r.ok || !contentType.includes('html')) return list;
+    const $ = cheerio.load(await r.text());
+    const authors = $('meta[name="citation_author"]').map((_, node) => $(node).attr('content')).get().filter(Boolean);
+    if (!authors.length) return list;
+    list.forEach(item => {
+      if (!Array.isArray(item.author) || !item.author.length) item.author = authors.map(nameToCSL);
+      if (!item.URL) item.URL = r.url;
+    });
+  } catch { /* DOI metadata is still usable without this enrichment. */ }
+  return list;
+}
+
 // Format: per-entry reference list + per-item in-text, both aligned to items order.
 // Uses citeproc's engine so numbering (IEEE/Vancouver) and disambiguation (2013a/2013b)
 // are computed with the whole set in context — a lone-item render can't do either.
@@ -265,8 +294,9 @@ app.get('/api/lookup', async (req, res) => {
   const { doi, isbn } = req.query;
   try {
     if (doi) {
-      const cite = await Cite.async(String(doi).trim());
-      return res.json(cite.data);
+      const cleanDoi = normalizeDoi(doi);
+      const cite = await Cite.async(cleanDoi);
+      return res.json(await enrichMissingDoiAuthors(cite.data, cleanDoi));
     }
     if (isbn) {
       const clean = String(isbn).replace(/[^0-9Xx]/g, '');
@@ -469,4 +499,4 @@ if (process.env.NODE_ENV !== 'test' && process.env.CITELOCAL_NO_AUTO_START !== '
   console.log(`CiteLocal running: http://localhost:${port}`);
 }
 
-export { app, defaultLibrary, extractCSL, nameToCSL, normalizeLibrary, parseDate, readLibrary, writeLibrary, crossrefToCSL, clean_, startServer, DATA_DIR, LIBRARY_FILE, computeDefaultDataDir };
+export { app, defaultLibrary, extractCSL, nameToCSL, normalizeDoi, normalizeLibrary, parseDate, readLibrary, writeLibrary, crossrefToCSL, clean_, startServer, DATA_DIR, LIBRARY_FILE, computeDefaultDataDir };

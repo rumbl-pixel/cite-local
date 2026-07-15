@@ -645,15 +645,18 @@ async function runOmni() {
     // DOI resolver, not the generic scraper — doi.org itself sits behind a
     // bot challenge that silently returns a Cloudflare page as "the source".
     const doiUrlMatch = q.match(/^https?:\/\/(?:dx\.)?doi\.org\/(.+)$/i);
-    if (doiUrlMatch) items = await api('/api/lookup?doi=' + encodeURIComponent(doiUrlMatch[1]));
+    if (doiUrlMatch) items = await api('/api/lookup?doi=' + encodeURIComponent(normalizeDoiInput(doiUrlMatch[1])));
     else if (/^https?:\/\//i.test(q)) items = [await api('/api/scrape?url=' + encodeURIComponent(q))];
-    else if (/^10\.\d{4,}\//.test(q)) items = await api('/api/lookup?doi=' + encodeURIComponent(q));
+    else if (/^10\.\d{4,}\//.test(q)) items = await api('/api/lookup?doi=' + encodeURIComponent(normalizeDoiInput(q)));
     else if (isISBN(q)) items = await api('/api/lookup?isbn=' + encodeURIComponent(q));
     else items = await api('/api/search?q=' + encodeURIComponent(q));
     showResults(Array.isArray(items) ? items : [items]);
   } catch (err) {
     box.innerHTML = `<div class="spin">Could not fetch that (${esc(err.error || err.message || 'error')}). Try manual entry.</div>`;
   }
+}
+function normalizeDoiInput(s) {
+  return String(s || '').trim().replace(/^[\s(<[]+|[\s)>.,;:!?]+$/g, '');
 }
 function isISBN(s) { const d = s.replace(/[- ]/g, ''); return /^(97[89])?\d{9}[\dXx]$/.test(d); }
 function showResults(items) {

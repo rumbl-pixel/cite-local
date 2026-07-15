@@ -9,7 +9,7 @@ import '@citation-js/plugin-csl';
 
 process.env.NODE_ENV = 'test';
 
-const { computeDefaultDataDir, defaultLibrary, extractCSL, nameToCSL, normalizeLibrary, parseDate } = await import('./server.js');
+const { computeDefaultDataDir, defaultLibrary, extractCSL, nameToCSL, normalizeDoi, normalizeLibrary, parseDate } = await import('./server.js');
 
 let failed = 0;
 const check = (name, fn) => { try { fn(); console.log('  ok  ' + name); } catch (e) { failed++; console.log('FAIL  ' + name + ' — ' + e.message); } };
@@ -23,6 +23,10 @@ check('nameToCSL keeps a single token literal', () => {
 });
 check('parseDate reads a year', () => {
   assert.deepStrictEqual(parseDate('2019-04-01'), { 'date-parts': [[2019, 4, 1]] });
+});
+check('normalizeDoi strips copied URL wrappers and sentence punctuation', () => {
+  assert.strictEqual(normalizeDoi('https://doi.org/10.1017/9781108903837.004.'), '10.1017/9781108903837.004');
+  assert.strictEqual(normalizeDoi('doi:10.1017/9781108903837.004)'), '10.1017/9781108903837.004');
 });
 
 // --- URL scrape extraction (offline, from fixture HTML) ---
@@ -530,6 +534,8 @@ check('a doi.org URL routes through DOI lookup, not the page scraper', () => {
   const doiUrlBranch = fnBody.slice(doiUrlMatchIdx, scrapeApiIdx);
   assert.ok(doiUrlBranch.includes('doi') && doiUrlBranch.includes('.org'), 'the branch must actually detect doi.org URLs');
   assert.match(doiUrlBranch, /api\('\/api\/lookup\?doi=/, 'doi.org branch must call the DOI lookup API, not the scraper');
+  assert.match(doiUrlBranch, /normalizeDoiInput/, 'doi.org branch must strip copied trailing punctuation before lookup');
+  assert.match(serverSource, /function enrichMissingDoiAuthors/, 'DOI lookup should enrich missing authors from the landing page when possible');
 });
 
 // --- renderBiblio must guard against out-of-order responses. Styles
