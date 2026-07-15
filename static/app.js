@@ -705,7 +705,7 @@ async function runOmni() {
   }
 }
 function normalizeDoiInput(s) {
-  return String(s || '').trim().replace(/^[\s(<[]+|[\s)>.,;:!?]+$/g, '');
+  return String(s || '').trim().replace(/^[\s(<[]+|[\s)>.,;:!?/]+$/g, '');
 }
 function isISBN(s) { const d = s.replace(/[- ]/g, ''); return /^(97[89])?\d{9}[\dXx]$/.test(d); }
 function showResults(items) {

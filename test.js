@@ -26,6 +26,8 @@ check('parseDate reads a year', () => {
 });
 check('normalizeDoi strips copied URL wrappers and sentence punctuation', () => {
   assert.strictEqual(normalizeDoi('https://doi.org/10.1017/9781108903837.004.'), '10.1017/9781108903837.004');
+  assert.strictEqual(normalizeDoi('https://doi.org/10.1017/9781108903837.004,'), '10.1017/9781108903837.004');
+  assert.strictEqual(normalizeDoi('https://doi.org/10.1017/9781108903837.004/'), '10.1017/9781108903837.004');
   assert.strictEqual(normalizeDoi('doi:10.1017/9781108903837.004)'), '10.1017/9781108903837.004');
 });
 

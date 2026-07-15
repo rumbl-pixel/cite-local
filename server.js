@@ -248,7 +248,7 @@ function normalizeDoi(value) {
     .trim()
     .replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, '')
     .replace(/^doi:\s*/i, '')
-    .replace(/^[\s(<[]+|[\s)>.,;:!?]+$/g, '');
+    .replace(/^[\s(<[]+|[\s)>.,;:!?/]+$/g, '');
 }
 
 async function enrichMissingDoiAuthors(items, doi) {
