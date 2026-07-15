@@ -254,7 +254,8 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.match(cssSource, /\.pdf-drawer-tab/);
   assert.match(cssSource, /\.folder-block/);
   assert.match(cssSource, /\.folder-add/);
-  assert.match(cssSource, /\.folder-remove/);
+  assert.match(cssSource, /\.folder-menu/);
+  assert.match(cssSource, /\.folder-rename-form/);
   assert.match(cssSource, /\.folder-creator/);
   assert.match(htmlSource, /data-tool="word-count"/);
   assert.match(htmlSource, /data-tool="pdf-tools"/);
@@ -297,7 +298,7 @@ check('app shell exposes local library, citation workspace, and notepad regions'
   assert.doesNotMatch(appSource, /openPdfActions/);
   assert.match(appSource, /\$\('#closePdfTools'\)\.onclick = \(\) => setActiveTool\(''\);/);
   assert.match(htmlSource, /<script type="module" src="app\.js\?v=drawer\d+"><\/script>/);
-  ['saveLibrary', 'renderSourceList', 'renderNotes', 'setRailCollapsed', 'setNotesDrawerOpen', 'compactRailSections', 'notesBackdrop', 'renderLibrarySections', 'setRailSection', 'setActiveTool', 'setPdfDrawerExpanded', 'renderToolWorkspace', 'setPdfFile', 'selectPdfTool', 'visibleProjectIndexes', 'libraryFolders', 'ensureFolder', 'renderFolderBlock', 'createFolder', 'deleteEmptyFolder', 'trashFolderProjects', 'removeFolderRecord', 'createProject', 'loadStorageInfo', 'loadAppHealth', 'renderAppHealth', 'openDataFolder', 'textWithoutParentheses', 'countWords', 'renderWordCount', 'restoreToolDrafts'].forEach(name => assert.match(appSource, new RegExp(name)));
+  ['saveLibrary', 'renderSourceList', 'renderNotes', 'setRailCollapsed', 'setNotesDrawerOpen', 'compactRailSections', 'notesBackdrop', 'renderLibrarySections', 'setRailSection', 'setActiveTool', 'setPdfDrawerExpanded', 'renderToolWorkspace', 'setPdfFile', 'selectPdfTool', 'visibleProjectIndexes', 'libraryFolders', 'ensureFolder', 'renderFolderBlock', 'renderFolderActionMenu', 'renderFolderRenameForm', 'createFolder', 'renameFolder', 'deleteEmptyFolder', 'trashFolderProjects', 'removeFolderRecord', 'createProject', 'loadStorageInfo', 'loadAppHealth', 'renderAppHealth', 'openDataFolder', 'textWithoutParentheses', 'countWords', 'renderWordCount', 'restoreToolDrafts'].forEach(name => assert.match(appSource, new RegExp(name)));
 });
 check('notes can be added as rows and linked to saved sources', () => {
   assert.match(htmlSource, /id="selectedSourceNotes"/);
@@ -539,6 +540,23 @@ check('folder membership compares folder names case-insensitively', () => {
   const fn = appSource.slice(appSource.indexOf('function projectsInFolder('), appSource.indexOf('function setRailCollapsed('));
   assert.match(fn, /toLowerCase\(\)/);
   assert.doesNotMatch(fn, /\(p\.folder \|\| 'General'\) === folder/);
+});
+check('folder rows expose a compact action menu with inline rename', () => {
+  const fn = appSource.slice(appSource.indexOf('function renderFolderActionMenu('), appSource.indexOf('function renderFolderRenameForm('));
+  assert.match(fn, /el\('details'/);
+  assert.match(fn, /textContent: 'Rename'/);
+  assert.match(fn, /Move to Trash/);
+  assert.match(fn, /Delete folder/);
+  assert.match(appSource, /renamingFolder = folder/);
+  assert.match(appSource, /className: 'folder-rename-form'/);
+});
+check('folder rename moves projects and merges into existing folder names', () => {
+  const fn = appSource.slice(appSource.indexOf('function renameFolder('), appSource.indexOf('function removeFolderRecord('));
+  assert.match(fn, /libraryFolders\(\)\.find/);
+  assert.match(fn, /db\.projects\.forEach/);
+  assert.match(fn, /p\.folder = target/);
+  assert.match(fn, /removeFolderRecord\(oldName\)/);
+  assert.doesNotMatch(fn, /prompt\(/);
 });
 
 // --- PDF drop zone must validate file type on drop, same as the file picker

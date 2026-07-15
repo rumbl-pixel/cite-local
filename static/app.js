@@ -47,6 +47,7 @@ let railCollapsed = false;
 let notesDrawerOpen = false;
 let activeRailSection = 'library';
 let activeFolder = 'General';
+let renamingFolder = '';
 let activeTool = '';
 let pdfDrawerExpanded = false;
 let selectedPdfFile = null;
@@ -435,37 +436,74 @@ function renderProjectList() {
 function renderFolderBlock(list, folder) {
   const items = projectsInFolder(folder);
   const box = el('section', { className: folder === activeFolder ? 'folder-block active' : 'folder-block' });
-  const head = el('div', { className: 'folder-heading-row' });
-  const name = el('button', { className: 'folder-heading', type: 'button' });
-  name.innerHTML = `<span>${esc(folder)}</span><small>${items.length} assignment${items.length === 1 ? '' : 's'}</small>`;
-  name.onclick = () => {
-    activeFolder = folder;
-    if (items.length) {
-      db.active = items[0].i;
-      db.selected = proj().sources[0]?.id || null;
-    }
-    saveLibrary();
-    renderAll();
-  };
-  const add = el('button', { className: 'folder-add', type: 'button', textContent: '+' });
-  add.title = `New bibliography in ${folder}`;
-  add.setAttribute('aria-label', `New bibliography in ${folder}`);
-  add.onclick = () => createProject(folder);
-  head.append(name, add);
-  if (folder !== 'General') {
-    const remove = el('button', { className: 'folder-remove', type: 'button', textContent: items.length ? 'Trash' : 'Delete' });
-    remove.title = items.length ? `Move ${folder} bibliographies to Trash` : `Delete empty folder ${folder}`;
-    remove.setAttribute('aria-label', remove.title);
-    remove.onclick = () => items.length ? trashFolderProjects(folder) : deleteEmptyFolder(folder);
-    head.appendChild(remove);
+  if (renamingFolder.toLowerCase() === folder.toLowerCase()) {
+    box.appendChild(renderFolderRenameForm(folder));
+  } else {
+    const head = el('div', { className: 'folder-heading-row' });
+    const name = el('button', { className: 'folder-heading', type: 'button' });
+    name.innerHTML = `<span>${esc(folder)}</span><small>${items.length} assignment${items.length === 1 ? '' : 's'}</small>`;
+    name.onclick = () => {
+      activeFolder = folder;
+      if (items.length) {
+        db.active = items[0].i;
+        db.selected = proj().sources[0]?.id || null;
+      }
+      saveLibrary();
+      renderAll();
+    };
+    const add = el('button', { className: 'folder-add', type: 'button', textContent: '+' });
+    add.title = `New bibliography in ${folder}`;
+    add.setAttribute('aria-label', `New bibliography in ${folder}`);
+    add.onclick = () => createProject(folder);
+    head.append(name, add);
+    if (folder !== 'General') head.appendChild(renderFolderActionMenu(folder, items));
+    box.appendChild(head);
   }
-  box.appendChild(head);
   if (!items.length) {
     box.appendChild(el('p', { className: 'empty tight', textContent: 'Empty unit folder' }));
   } else {
     items.forEach(({ p, i }) => renderProjectButton(box, p, i));
   }
   list.appendChild(box);
+}
+function renderFolderActionMenu(folder, items) {
+  const menu = el('details', { className: 'folder-menu' });
+  const summary = el('summary', { title: `Folder actions for ${folder}`, textContent: '...' });
+  summary.setAttribute('aria-label', `Folder actions for ${folder}`);
+  const actions = el('div', { className: 'folder-menu-actions' });
+  const rename = el('button', { type: 'button', textContent: 'Rename' });
+  rename.onclick = e => {
+    e.preventDefault();
+    renamingFolder = folder;
+    renderProjectList();
+    document.querySelector('.folder-rename-input')?.focus();
+  };
+  const remove = el('button', { className: 'danger', type: 'button', textContent: items.length ? 'Move to Trash' : 'Delete folder' });
+  remove.onclick = e => {
+    e.preventDefault();
+    if (items.length) trashFolderProjects(folder);
+    else deleteEmptyFolder(folder);
+  };
+  actions.append(rename, remove);
+  menu.append(summary, actions);
+  return menu;
+}
+function renderFolderRenameForm(folder) {
+  const form = el('form', { className: 'folder-rename-form' });
+  const input = el('input', { className: 'folder-rename-input', value: folder });
+  input.setAttribute('aria-label', `Rename ${folder}`);
+  const save = el('button', { type: 'submit', textContent: 'Save' });
+  const cancel = el('button', { type: 'button', textContent: 'Cancel' });
+  cancel.onclick = () => {
+    renamingFolder = '';
+    renderProjectList();
+  };
+  form.onsubmit = e => {
+    e.preventDefault();
+    renameFolder(folder, input.value);
+  };
+  form.append(input, save, cancel);
+  return form;
 }
 function renderProjectButton(list, p, i) {
   const b = el('button', { className: i === db.active ? 'project-item active' : 'project-item', type: 'button' });
@@ -526,6 +564,27 @@ function createFolder() {
   saveLibrary();
   renderAll();
   toast(`Folder ready: ${folder}`);
+}
+function renameFolder(oldName, newName) {
+  const clean = String(newName || '').trim();
+  if (!clean) return toast('Folder name required');
+  if (oldName === 'General') return toast('General is the default folder');
+  const oldKey = oldName.toLowerCase();
+  const existing = libraryFolders().find(folder => folder.toLowerCase() === clean.toLowerCase() && folder.toLowerCase() !== oldKey);
+  const target = existing || clean;
+  db.projects.forEach(p => {
+    if (String(p.folder || 'General').toLowerCase() === oldKey) p.folder = target;
+  });
+  removeFolderRecord(oldName);
+  if (!Array.isArray(db.folders)) db.folders = [];
+  if (!db.folders.some(f => String(typeof f === 'string' ? f : f?.name || '').trim().toLowerCase() === target.toLowerCase())) {
+    db.folders.push({ id: `folder-${slug(target)}-${Date.now()}`, name: target });
+  }
+  activeFolder = target;
+  renamingFolder = '';
+  saveLibrary();
+  renderAll();
+  toast(existing ? `Merged into ${target}` : `Renamed folder to ${target}`);
 }
 function removeFolderRecord(folder) {
   if (!Array.isArray(db.folders)) return;
