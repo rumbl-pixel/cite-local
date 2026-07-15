@@ -261,9 +261,10 @@ function ensureFolder(name) {
   return clean;
 }
 function projectsInFolder(folder, includeTrashed = false) {
+  const key = String(folder || 'General').toLowerCase();
   return db.projects
     .map((p, i) => ({ p, i }))
-    .filter(({ p }) => (p.folder || 'General') === folder && (includeTrashed || !p.trashedAt));
+    .filter(({ p }) => String(p.folder || 'General').toLowerCase() === key && (includeTrashed || !p.trashedAt));
 }
 function setRailCollapsed(next) {
   railCollapsed = next;
@@ -532,7 +533,7 @@ function removeFolderRecord(folder) {
 }
 function deleteEmptyFolder(folder) {
   if (folder === 'General') return toast('General is the default folder');
-  if (projectsInFolder(folder, true).length) return toast('Move or trash the bibliographies in this folder first');
+  if (projectsInFolder(folder).length) return toast('Move or trash the bibliographies in this folder first');
   if (!confirm(`Delete empty folder "${folder}"?`)) return;
   removeFolderRecord(folder);
   if (activeFolder.toLowerCase() === folder.toLowerCase()) activeFolder = 'General';

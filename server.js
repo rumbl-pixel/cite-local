@@ -69,7 +69,7 @@ function normalizeLibrary(data) {
   }));
   const folderNames = [
     ...(Array.isArray(data.folders) ? data.folders.map(f => typeof f === 'string' ? f : f?.name) : []),
-    ...projects.map(p => p.folder || 'General'),
+    ...projects.filter(p => !p.trashedAt).map(p => p.folder || 'General'),
     'General',
   ].map(name => String(name || '').trim()).filter(Boolean);
   const seenFolders = new Set();

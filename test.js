@@ -385,7 +385,7 @@ check('normalizing an imported library preserves projects, notes, and sources', 
   assert.strictEqual(lib.projects[0].name, 'Assignment A');
   assert.strictEqual(lib.projects[0].unit, 'NURS1004');
   assert.strictEqual(lib.projects[0].folder, 'Week 4');
-  assert.deepStrictEqual(lib.folders.map(f => f.name), ['Week 4', 'General']);
+  assert.deepStrictEqual(lib.folders.map(f => f.name), ['General']);
   assert.strictEqual(lib.projects[0].trashedAt, '2026-07-08T00:00:00.000Z');
   assert.strictEqual(lib.projects[0].notes[0].text, 'legacy note');
   assert.strictEqual(lib.projects[0].sources[0].id, 's1');
@@ -396,6 +396,16 @@ check('normalizing an imported library collapses duplicate folder names case-ins
     projects: [{ name: 'Assignment A', folder: 'NURS1004', notes: [], sources: [] }],
   });
   assert.deepStrictEqual(lib.folders.map(f => f.name), ['NURS1004', 'General']);
+});
+check('normalizing an imported library does not recreate folders from trashed projects', () => {
+  const lib = normalizeLibrary({
+    folders: [],
+    projects: [
+      { name: 'Old duplicate', folder: 'Mistake', trashedAt: '2026-07-15T00:00:00.000Z', notes: [], sources: [] },
+      { name: 'Active work', folder: 'General', trashedAt: '', notes: [], sources: [] },
+    ],
+  });
+  assert.deepStrictEqual(lib.folders.map(f => f.name), ['General']);
 });
 check('normalizeLibrary round-trips folders, trash, notes, and sources', () => {
   const original = {
@@ -517,6 +527,18 @@ check('project folder field only commits (and calls ensureFolder) on change, not
   const commitStart = fnBody.indexOf('const commitFolder');
   assert.notStrictEqual(commitStart, -1, 'commitFolder not found');
   assert.match(fnBody.slice(commitStart), /ensureFolder/);
+});
+check('empty folder deletion ignores already-trashed projects', () => {
+  const fnStart = appSource.indexOf('function deleteEmptyFolder(');
+  assert.notStrictEqual(fnStart, -1, 'deleteEmptyFolder not found');
+  const fnBody = appSource.slice(fnStart, appSource.indexOf('function trashFolderProjects(', fnStart));
+  assert.match(fnBody, /projectsInFolder\(folder\)\.length/);
+  assert.doesNotMatch(fnBody, /projectsInFolder\(folder,\s*true\)/);
+});
+check('folder membership compares folder names case-insensitively', () => {
+  const fn = appSource.slice(appSource.indexOf('function projectsInFolder('), appSource.indexOf('function setRailCollapsed('));
+  assert.match(fn, /toLowerCase\(\)/);
+  assert.doesNotMatch(fn, /\(p\.folder \|\| 'General'\) === folder/);
 });
 
 // --- PDF drop zone must validate file type on drop, same as the file picker
