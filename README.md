@@ -11,8 +11,8 @@ No accounts, no ads, no 7-day expiry, no subscription. Runs on your machine.
 - **Manual entry** for 15 source types (website, journal, book, chapter, thesis,
   film, software, …); an "Other/generic" type exposes every common field.
 - **10,852 citation styles** from the official CSL style repository:
-  APA, MLA, Chicago, Harvard, Vancouver, IEEE, AMA, and thousands more. Type in
-  the style box to search.
+  APA, MLA, Chicago, Harvard, Vancouver, IEEE, AMA, and thousands more. The
+  style picker lets you choose from the bundled CSL styles.
 - **Live bibliography**: formatted reference + in-text citation per source,
   auto-restyled when you switch styles. Edit / delete / copy each entry.
 - **Multiple named bibliographies** (projects), saved locally.
@@ -117,8 +117,9 @@ are on you, not the engine:
 1. **Select the exact style your course requires.** "APA" in the repo is APA
    7th edition; "MLA" is 9th; Chicago has author-date *and* notes variants;
    "Harvard" is not one standard — there are dozens of school-specific Harvard
-   styles. Search the style box for the precise one (e.g. your university's
-   name). Wrong-variant selection is the #1 cause of "wrong" citations.
+   styles. Use the style picker to choose the precise one (e.g. your
+   university's name). Wrong-variant selection is the #1 cause of "wrong"
+   citations.
 2. **Sanity-check auto-imported data.** DOI/CrossRef lookups are excellent;
    ISBN is good; URL scraping is best-effort (a page with poor metadata yields a
    rough guess). Always glance at an auto-filled source and fix it in **Edit** —
@@ -133,8 +134,8 @@ preview (`(Smith, 2013, p. 42)` — you add the locator when writing), and Chica
 
 ## Not included (on purpose)
 
-- **Grammar / plagiarism checker** — separate products and intentionally outside
-  this app's first release.
+- **Grammar / plagiarism checker** — there is no local Similarity Checker in
+  this app.
 - **Word/Docs live plugin** — the "Copy All" HTML export covers pasting into a
   document. If you write in Word a lot, Zotero's plugin is better; see
   `ZOTERO-QUICKSTART.md`.
